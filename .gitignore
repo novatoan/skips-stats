@@ -1,0 +1,9 @@
+# Reference docs — not part of the web app
+*.jpg
+*.pdf
+
+# Claude IDE config
+.claude/
+
+# macOS
+.DS_Store
