@@ -225,7 +225,7 @@
     }
     #bench-grid {
       flex: 1; display: grid; grid-template-columns: 1fr 1fr;
-      gap: 7px; padding: 7px; align-content: start;
+      gap: 10px; padding: 7px; align-content: start;
       overflow-y: auto; min-height: 0;
     }
     .bench-card {
@@ -233,28 +233,33 @@
       border: 2px solid rgba(255,255,255,0.18); background: #0a0a0a;
       user-select: none; -webkit-user-select: none;
       transition: transform 0.08s, box-shadow 0.08s;
+      aspect-ratio: 1;
     }
     .bench-card:active { transform: scale(0.92); box-shadow: 0 0 14px rgba(255,255,255,0.2); }
     .bench-card .avatar {
       width: 100%; aspect-ratio: 1; position: relative;
       display: flex; align-items: center; justify-content: center;
       font-size: clamp(0.6em, 1.4vw, 0.85em); font-weight: 900; color: #fff;
-      text-align: center; padding: 6px; word-break: break-word; line-height: 1.2;
+      text-align: center; padding: 6px 6px 20px 6px; word-break: break-word; line-height: 1.2;
+    }
+    .bench-card .card-name {
+      display: block; text-align: center; width: 100%;
     }
     .pt-badge {
       position: absolute; bottom: 4px; right: 5px;
-      font-size: clamp(0.38em, 0.8vw, 0.5em); font-weight: 900;
-      opacity: 0.75; letter-spacing: 0.3px; pointer-events: none; z-index: 3;
+      font-size: clamp(0.5em, 1.05vw, 0.64em); font-weight: 900;
+      opacity: 0.75; letter-spacing: 0.3px; pointer-events: none; z-index: 6;
     }
     .stat-badge {
       position: absolute; bottom: 4px; left: 5px;
-      font-size: clamp(0.38em, 0.8vw, 0.5em); font-weight: 900;
-      opacity: 0.75; letter-spacing: 0.3px; pointer-events: none; z-index: 3;
+      font-size: clamp(0.5em, 1.05vw, 0.64em); font-weight: 900;
+      opacity: 0.75; letter-spacing: 0.3px; pointer-events: none; z-index: 6;
     }
-    .bench-card .pname {
-      padding: 3px 3px; font-size: clamp(0.45em, 1.1vw, 0.62em);
-      font-weight: 900; letter-spacing: 1px;
-      text-align: center; color: #fff;
+    .num-badge {
+      position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%);
+      font-size: clamp(0.54em, 1.2vw, 0.74em); font-weight: 900;
+      opacity: 0.85; letter-spacing: 0.3px; pointer-events: none; z-index: 6;
+      white-space: nowrap;
     }
     #bench-footer {
       display: flex; gap: 6px; padding: 8px; flex-shrink: 0;
@@ -345,12 +350,7 @@
       font-size: clamp(0.9em, 2.2vw, 1.5em); font-weight: 900; color: #fff;
       text-align: center; padding: 8px; word-break: break-word; line-height: 1.2;
     }
-    .field-slot .pname {
-      flex-shrink: 0; padding: 5px 4px;
-      font-size: clamp(0.5em, 1.2vw, 0.72em); font-weight: 900;
-      letter-spacing: 1px;
-      text-align: center; color: #fff;
-    }
+    /* .field-slot .pname replaced by .num-badge */
     .field-slot.has-disc { }
     .field-slot.has-disc .field-avatar::after {
       content: ''; position: absolute;
@@ -361,7 +361,7 @@
       pointer-events: none; z-index: 4;
     }
     .unknown-overlay {
-      position: absolute; top: 0; left: 0; width: 100%; bottom: 36px;
+      position: absolute; top: 0; left: 0; width: 100%; bottom: 0;
       display: flex; align-items: center; justify-content: center;
       font-size: clamp(3em, 8vw, 5.5em); font-weight: 900; color: #fff;
       background: rgba(255,255,255,0.42); z-index: 5;
@@ -432,15 +432,18 @@
     .event-to   { color: rgba(255,120,120,0.85); }
     .event-edit { color: rgba(255,255,255,0.28); font-style: italic; }
     #turn-btn {
-      display: block; width: calc(100% - 14px); margin: 52px 7px 0;
+      display: block; width: calc(100% - 14px); margin: 20px 7px 0;
       padding: clamp(14px,3vh,26px) 6px; font-family: inherit;
       font-size: clamp(1em, 2.5vw, 1.4em); font-weight: 900;
       letter-spacing: 3px; color: #fff; background: #C62828;
       border: none; border-radius: 5px; cursor: pointer; transition: opacity 0.1s;
     }
     #turn-btn:active { opacity: 0.65; }
-    #turn-menu { display: none; flex-direction: column; margin-top: 8px; }
-    #turn-menu.open { display: flex; }
+    #turn-menu {
+      display: flex; flex-direction: column; margin-top: 8px;
+      visibility: hidden; pointer-events: none;
+    }
+    #turn-menu.open { visibility: visible; pointer-events: auto; }
     .to-btn {
       display: block; width: calc(100% - 14px); margin: 0 7px 8px;
       padding: clamp(10px,2.2vh,18px) 6px; font-family: inherit;
@@ -1133,7 +1136,10 @@ function render() {
     av.className = 'avatar';
     av.style.background = cfg.swatch;
     av.style.color = cfg.darkText ? '#111' : '#fff';
-    av.textContent = player.name;
+    const nameEl = document.createElement('span');
+    nameEl.className = 'card-name';
+    nameEl.textContent = player.name;
+    av.appendChild(nameEl);
     card.appendChild(av);
 
     const ptB = document.createElement('span');
@@ -1157,18 +1163,19 @@ function render() {
     }
 
     if (player.number && player.number.trim()) {
-      const nm = document.createElement('div');
-      nm.className = 'pname';
-      nm.style.background = cfg.tag;
-      nm.style.color = cfg.darkText ? '#111' : '#fff';
+      const nm = document.createElement('span');
+      nm.className = 'num-badge';
+      nm.style.color = cfg.darkText ? 'rgba(0,0,0,0.75)' : 'rgba(255,255,255,0.85)';
       nm.textContent = '#' + player.number.trim();
-      card.appendChild(nm);
+      av.appendChild(nm);
     }
 
     card.addEventListener('pointerdown', e => startDrag(e, player.id, null));
     card.addEventListener('click', () => { if (justDragged) return; onBenchClick(player.id); });
     benchGrid.appendChild(card);
   });
+  // Sync row track height to column width (aspect-ratio not propagated by grid track sizing)
+  requestAnimationFrame(syncBenchRows);
 
   // Field slots
   document.querySelectorAll('.field-slot').forEach((slot, i) => {
@@ -1196,10 +1203,9 @@ function render() {
     slot.appendChild(av);
 
     if (player.number && player.number.trim()) {
-      const nm = document.createElement('div');
-      nm.className = 'pname';
-      nm.style.background = cfg.tag;
-      nm.style.color = cfg.darkText ? '#111' : '#fff';
+      const nm = document.createElement('span');
+      nm.className = 'num-badge';
+      nm.style.color = cfg.darkText ? 'rgba(0,0,0,0.75)' : 'rgba(255,255,255,0.85)';
       nm.textContent = '#' + player.number.trim();
       slot.appendChild(nm);
     }
@@ -1265,6 +1271,8 @@ function onFieldClick(idx) {
   const td = getTeamData();
   const pid = td.field[idx];
   if (!pid) return;
+  // Re-clicking the current disc holder is a no-op — green stays, no extra touch
+  if (!td.turnoverUnknown && td.discHolder === pid) return;
   pushHistory();
   if (td.turnoverUnknown) {
     // picking up after a turnover — no assister
@@ -1273,10 +1281,6 @@ function onFieldClick(idx) {
     td.turnoverUnknown = false;
     getPlayerStat(pid).touches++;
     state.eventLog.push({ text: `${getPlayerName(pid)} picks up`, type: 'pass' });
-  } else if (td.discHolder === pid) {
-    // toggling disc off this player
-    td.discHolder = null;
-    state.eventLog.push({ text: `(${getPlayerName(pid)} disc cleared)`, type: 'edit' });
   } else {
     // normal pass — previous holder becomes potential assister
     td.prevDiscHolder = td.discHolder;
@@ -1309,7 +1313,7 @@ function onTurnover(type) {
   // Hand possession to the other team
   state.activeTeam = state.activeTeam === 'team1' ? 'team2' : 'team1';
   const newTd = getTeamData();
-  newTd.turnoverUnknown = true; // user taps who now has the disc
+  if (type === 'd') newTd.turnoverUnknown = true; // D only: defensive pickup is ambiguous
   saveState(); render();
 }
 
@@ -1731,6 +1735,22 @@ document.getElementById('save-edit-btn').addEventListener('click', saveEditModal
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js').catch(() => {});
 }
+
+// ============================================================
+// BENCH GRID ROW SYNC
+// CSS Grid auto-track sizing ignores aspect-ratio on grid items,
+// so row tracks end up too short and cards overlap. Fix: explicitly
+// set grid-auto-rows to the computed column track width.
+// ============================================================
+function syncBenchRows() {
+  const grid = document.getElementById('bench-grid');
+  if (!grid) return;
+  // bench-grid has padding: 7px on each side (14px total) and a 10px column gap
+  const colW = (grid.clientWidth - 14 - 10) / 2;
+  if (colW > 0) grid.style.gridAutoRows = colW + 'px';
+}
+// Re-sync whenever the bench panel is resized
+new ResizeObserver(syncBenchRows).observe(document.getElementById('bench-grid'));
 
 // ============================================================
 // INIT
