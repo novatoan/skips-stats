@@ -248,6 +248,7 @@
       border-radius: 7px; overflow: hidden; cursor: pointer; position: relative;
       border: 2px solid rgba(255,255,255,0.18); background: #0a0a0a;
       user-select: none; -webkit-user-select: none;
+      touch-action: none;
       transition: transform 0.08s, box-shadow 0.08s;
       aspect-ratio: 1;
     }
@@ -366,6 +367,7 @@
     .field-slot {
       border-radius: 9px; overflow: hidden; position: relative;
       cursor: pointer; user-select: none; -webkit-user-select: none;
+      touch-action: none;
       display: flex; flex-direction: column;
       background: linear-gradient(145deg, #b8b8b8, #939393);
       border: 3px solid #888; transition: border-color 0.15s, box-shadow 0.15s;
@@ -1555,9 +1557,14 @@ function startDrag(e, playerId, fromSlot) {
     playerId, fromSlot, sourceEl, ghost: null,
     startX: e.clientX, startY: e.clientY, didDrag: false,
     rect: sourceEl.getBoundingClientRect(),
+    pointerId: e.pointerId,
   };
+  // setPointerCapture keeps events flowing on iOS Safari even if the finger
+  // leaves the originating element, preventing spurious pointercancel events.
+  try { sourceEl.setPointerCapture(e.pointerId); } catch(_) {}
   document.addEventListener('pointermove', onDragMove);
   document.addEventListener('pointerup', onDragEnd);
+  document.addEventListener('pointercancel', onDragEnd);
 }
 
 function activateDrag() {
@@ -1604,11 +1611,13 @@ function getDragTarget(x, y) {
 function onDragEnd(e) {
   document.removeEventListener('pointermove', onDragMove);
   document.removeEventListener('pointerup', onDragEnd);
+  document.removeEventListener('pointercancel', onDragEnd);
   if (!drag) return;
   document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
   drag.sourceEl.classList.remove('dragging');
   if (drag.ghost) drag.ghost.remove();
-  if (drag.didDrag) {
+  // pointercancel means iOS aborted the gesture — clean up but don't drop
+  if (drag.didDrag && e.type !== 'pointercancel') {
     executeDrop(getDragTarget(e.clientX, e.clientY));
     justDragged = true;
     setTimeout(() => { justDragged = false; }, 150);
