@@ -101,6 +101,22 @@
     .setup-nav-btn:active { opacity: 0.7; }
     #back-btn { background: #2a2a2a; }
     #start-game-btn { background: #1a6b1a; }
+    #setup-game-name-row {
+      background: #0a0a0a; border-bottom: 1px solid #222;
+      padding: 8px 20px; flex-shrink: 0; display: flex;
+      align-items: center; justify-content: center;
+    }
+    #game-name-input {
+      background: transparent; border: none;
+      border-bottom: 2px solid rgba(255,255,255,0.25);
+      color: rgba(255,255,255,0.75); font-family: inherit;
+      font-size: clamp(0.7em, 1.7vw, 0.95em); font-weight: 700;
+      letter-spacing: 2px; text-transform: uppercase;
+      width: 100%; max-width: 340px; padding: 4px 0;
+      text-align: center; outline: none; transition: border-color 0.15s;
+    }
+    #game-name-input::placeholder { color: rgba(255,255,255,0.25); }
+    #game-name-input:focus { border-color: rgba(255,255,255,0.6); }
 
     #setup-body {
       flex: 1; display: flex; overflow: hidden; min-height: 0;
@@ -239,25 +255,25 @@
     .bench-card .avatar {
       width: 100%; aspect-ratio: 1; position: relative;
       display: flex; align-items: center; justify-content: center;
-      font-size: clamp(0.6em, 1.4vw, 0.85em); font-weight: 900; color: #fff;
-      text-align: center; padding: 6px 6px 20px 6px; word-break: break-word; line-height: 1.2;
+      font-size: clamp(0.75em, 2.2vw, 1.3em); font-weight: 900; color: #fff;
+      text-align: center; padding: 6px 6px 26px 6px; word-break: break-word; line-height: 1.2;
     }
     .bench-card .card-name {
       display: block; text-align: center; width: 100%;
     }
     .pt-badge {
       position: absolute; bottom: 4px; right: 5px;
-      font-size: clamp(0.5em, 1.05vw, 0.64em); font-weight: 900;
+      font-size: clamp(0.6em, 1.6vw, 0.95em); font-weight: 900;
       opacity: 0.75; letter-spacing: 0.3px; pointer-events: none; z-index: 6;
     }
     .stat-badge {
       position: absolute; bottom: 4px; left: 5px;
-      font-size: clamp(0.5em, 1.05vw, 0.64em); font-weight: 900;
+      font-size: clamp(0.6em, 1.6vw, 0.95em); font-weight: 900;
       opacity: 0.75; letter-spacing: 0.3px; pointer-events: none; z-index: 6;
     }
     .num-badge {
       position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%);
-      font-size: clamp(0.54em, 1.2vw, 0.74em); font-weight: 900;
+      font-size: clamp(0.65em, 1.8vw, 1.05em); font-weight: 900;
       opacity: 0.85; letter-spacing: 0.3px; pointer-events: none; z-index: 6;
       white-space: nowrap;
     }
@@ -331,6 +347,21 @@
       flex: 1; display: grid;
       grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr;
       gap: 9px; padding: 9px 9px 5px; min-height: 0;
+      position: relative;
+    }
+    @keyframes d-pulse {
+      0%, 100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+      50% { opacity: 0.55; transform: translate(-50%, -50%) scale(0.96); }
+    }
+    #field-d-prompt {
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(200, 30, 30, 0.92); color: #fff;
+      font-size: clamp(0.75em, 1.8vw, 1.05em); font-weight: 900;
+      letter-spacing: 2px; text-transform: uppercase;
+      padding: 10px 24px; border-radius: 10px;
+      pointer-events: none; z-index: 10; white-space: nowrap; display: none;
+      animation: d-pulse 0.9s ease-in-out infinite;
     }
     .field-slot {
       border-radius: 9px; overflow: hidden; position: relative;
@@ -359,12 +390,6 @@
       border: 5px solid #4CAF50; border-radius: 50%;
       box-shadow: 0 0 18px rgba(76,175,80,0.75);
       pointer-events: none; z-index: 4;
-    }
-    .unknown-overlay {
-      position: absolute; top: 0; left: 0; width: 100%; bottom: 0;
-      display: flex; align-items: center; justify-content: center;
-      font-size: clamp(3em, 8vw, 5.5em); font-weight: 900; color: #fff;
-      background: rgba(255,255,255,0.42); z-index: 5;
     }
 
     #action-bar {
@@ -646,6 +671,10 @@
     <h2>GAME SETUP</h2>
     <button id="start-game-btn" class="setup-nav-btn">START GAME →</button>
   </div>
+  <div id="setup-game-name-row">
+    <input id="game-name-input" type="text" maxlength="40"
+      placeholder="GAME NAME" autocomplete="off" spellcheck="false">
+  </div>
   <div id="setup-body">
     <!-- Team 1 -->
     <div class="setup-panel" id="panel-team1">
@@ -716,6 +745,7 @@
       <div class="field-slot empty" data-slot="1"><span class="slot-label">PLAYER</span></div>
       <div class="field-slot empty" data-slot="2"><span class="slot-label">PLAYER</span></div>
       <div class="field-slot empty" data-slot="3"><span class="slot-label">PLAYER</span></div>
+      <div id="field-d-prompt">WHO GOT THE D?</div>
     </div>
     <div id="action-bar">
       <div id="goal-wrap">
@@ -809,6 +839,7 @@ function getColor(id) {
 let state = {
   view: 'home',
   setup: {
+    gameName: '',
     team1: { name: 'Dark',  colorId: 'black', players: [{ number: '', name: '' }] },
     team2: { name: 'Light', colorId: 'white', players: [{ number: '', name: '' }] },
   },
@@ -848,6 +879,7 @@ function initHome() {
 function startNewGame() {
   localStorage.removeItem('gt_save');
   state.setup = {
+    gameName: '',
     team1: { name: 'Dark',  colorId: 'black', players: [{ number: '', name: '' }] },
     team2: { name: 'Light', colorId: 'white', players: [{ number: '', name: '' }] },
   };
@@ -876,6 +908,15 @@ function resumeGame() {
 // ============================================================
 // SETUP SCREEN
 // ============================================================
+function defaultGameName() {
+  const now = new Date();
+  const m = now.getMonth() + 1;
+  const d = now.getDate();
+  const h = now.getHours();
+  const period = h < 12 ? 'morning' : h < 17 ? 'afternoon' : h < 21 ? 'evening' : 'night';
+  return `${m}/${d} ${period}`;
+}
+
 function initSetupScreen() {
   ['team1', 'team2'].forEach(key => {
     const nameInput = document.getElementById(`name-${key}`);
@@ -885,6 +926,11 @@ function initSetupScreen() {
     renderSetupPlayers(key);
     updatePanelColor(key);
   });
+  // Game name — auto-fill default if blank (new game), preserve if user already typed
+  const gnInput = document.getElementById('game-name-input');
+  if (!state.setup.gameName) state.setup.gameName = defaultGameName();
+  gnInput.value = state.setup.gameName;
+  gnInput.oninput = e => { state.setup.gameName = e.target.value; };
 }
 
 function updatePanelColor(key) {
@@ -1023,6 +1069,7 @@ function buildGameState() {
       turnoverUnknown: false,
     };
   });
+  state.gameName = state.setup.gameName.trim() || defaultGameName();
   state.score = { team1: 0, team2: 0 };
   state.playTime = {};
   state.stats = {};
@@ -1154,6 +1201,7 @@ function render() {
     const statParts = [];
     if (totalGoals > 0) statParts.push(totalGoals + 'G');
     if (pst.assists > 0) statParts.push(pst.assists + 'A');
+    if (pst.ds > 0) statParts.push(pst.ds + 'D');
     if (statParts.length > 0) {
       const stB = document.createElement('span');
       stB.className = 'stat-badge';
@@ -1222,6 +1270,7 @@ function render() {
     const statPartsF = [];
     if (totalGoalsF > 0) statPartsF.push(totalGoalsF + 'G');
     if (pstF.assists > 0) statPartsF.push(pstF.assists + 'A');
+    if (pstF.ds > 0) statPartsF.push(pstF.ds + 'D');
     if (statPartsF.length > 0) {
       const stF = document.createElement('span');
       stF.className = 'stat-badge';
@@ -1232,15 +1281,13 @@ function render() {
 
     if (pid === td.discHolder) slot.classList.add('has-disc');
 
-    if (td.turnoverUnknown) {
-      const ov = document.createElement('div');
-      ov.className = 'unknown-overlay'; ov.textContent = '?';
-      slot.appendChild(ov);
-    }
 
     slot.addEventListener('pointerdown', e => startDrag(e, pid, i));
     slot.onclick = () => { if (justDragged) return; onFieldClick(i); };
   });
+  // Show/hide the D pickup prompt
+  const dPrompt = document.getElementById('field-d-prompt');
+  if (dPrompt) dPrompt.style.display = td.turnoverUnknown ? 'flex' : 'none';
 
   // Event log
   const logEl = document.getElementById('event-log');
@@ -1275,12 +1322,13 @@ function onFieldClick(idx) {
   if (!td.turnoverUnknown && td.discHolder === pid) return;
   pushHistory();
   if (td.turnoverUnknown) {
-    // picking up after a turnover — no assister
+    // D pickup — credit the defender, no assister
     td.prevDiscHolder = null;
     td.discHolder = pid;
     td.turnoverUnknown = false;
+    getPlayerStat(pid).ds++;
     getPlayerStat(pid).touches++;
-    state.eventLog.push({ text: `${getPlayerName(pid)} picks up`, type: 'pass' });
+    state.eventLog.push({ text: `${getPlayerName(pid)} got a D`, type: 'pass' });
   } else {
     // normal pass — previous holder becomes potential assister
     td.prevDiscHolder = td.discHolder;
@@ -1292,7 +1340,7 @@ function onFieldClick(idx) {
 }
 
 function getPlayerStat(pid) {
-  if (!state.stats[pid]) state.stats[pid] = { goals1: 0, goals2: 0, assists: 0, turnovers: 0, touches: 0 };
+  if (!state.stats[pid]) state.stats[pid] = { goals1: 0, goals2: 0, assists: 0, ds: 0, turnovers: 0, touches: 0 };
   return state.stats[pid];
 }
 
@@ -1624,12 +1672,12 @@ function showStats() {
     const table = document.createElement('table');
     table.className = 'stats-table';
     table.innerHTML = `<thead><tr>
-      <th>NAME</th><th>#</th><th>TCH</th><th>1PT</th><th>2PT</th><th>PTS</th><th>AST</th><th>TO</th><th>TIME</th>
+      <th>NAME</th><th>#</th><th>TCH</th><th>1PT</th><th>2PT</th><th>PTS</th><th>AST</th><th>TO</th><th>D</th><th>TIME</th>
     </tr></thead>`;
     const tbody = document.createElement('tbody');
 
     team.players.forEach(p => {
-      const st = state.stats[p.id] || { goals1: 0, goals2: 0, assists: 0, turnovers: 0, touches: 0 };
+      const st = state.stats[p.id] || { goals1: 0, goals2: 0, assists: 0, ds: 0, turnovers: 0, touches: 0 };
       const totalPts = st.goals1 + st.goals2 * 2;
       const pt = state.playTime[p.id] || 0;
       const tr = document.createElement('tr');
@@ -1642,6 +1690,7 @@ function showStats() {
         <td><strong>${totalPts}</strong></td>
         <td>${st.assists || 0}</td>
         <td>${st.turnovers}</td>
+        <td>${st.ds || 0}</td>
         <td>${fmtPT(pt)}</td>`;
       tbody.appendChild(tr);
     });
@@ -1655,17 +1704,17 @@ function showStats() {
 }
 
 function exportCSV() {
-  const rows = [['Team','Name','Number','Touches','1pt Goals','2pt Goals','Total Pts','Assists','Turnovers','Play Time']];
+  const rows = [['Team','Name','Number','Touches','1pt Goals','2pt Goals','Total Pts','Assists','Turnovers','Ds','Play Time']];
   ['team1', 'team2'].forEach(key => {
     const team = state.teams[key];
     if (!team) return;
     team.players.forEach(p => {
-      const st = state.stats[p.id] || { goals1: 0, goals2: 0, assists: 0, turnovers: 0, touches: 0 };
+      const st = state.stats[p.id] || { goals1: 0, goals2: 0, assists: 0, ds: 0, turnovers: 0, touches: 0 };
       const totalPts = st.goals1 + st.goals2 * 2;
       const pt = state.playTime[p.id] || 0;
       rows.push([
         team.name || key, p.name, p.number || '',
-        st.touches || 0, st.goals1, st.goals2, totalPts, st.assists || 0, st.turnovers, fmtPT(pt)
+        st.touches || 0, st.goals1, st.goals2, totalPts, st.assists || 0, st.turnovers, st.ds || 0, fmtPT(pt)
       ]);
     });
   });
