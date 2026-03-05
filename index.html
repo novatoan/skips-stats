@@ -220,26 +220,25 @@
 
     /* ── GAME SCREEN ────────────────────────────────── */
     #game-screen { flex-direction: column; }
-    #game-body { display: flex; flex-direction: row; flex: 1; min-height: 0; overflow: hidden; }
+    #game-body { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow: hidden; }
 
-    /* Bench (left) */
-    #bench {
-      width: 32%; min-width: 190px;
-      display: flex; flex-direction: column;
-      background: #1050A0; transition: background 0.3s;
+    /* Team rows (stacked vertically, flex-ratio shifts on possession) */
+    .team-row {
+      display: flex; flex-direction: row; min-height: 0; overflow: hidden;
+      transition: flex 0.3s ease-in-out;
     }
-    #bench-header {
-      background: rgba(0,0,0,0.3); color: #fff; text-align: center;
-      padding: 11px 8px 8px;
-      font-size: clamp(0.9em, 2.5vw, 1.35em);
-      font-weight: 900; letter-spacing: 3px; flex-shrink: 0;
+    /* Bench panel (left column of each team row) */
+    .bench-panel {
+      width: 35%; min-width: 100px; display: flex; flex-direction: column;
+      transition: background 0.3s; overflow: hidden;
     }
-    #bench-team-label {
-      color: rgba(255,255,255,0.88); text-align: center; padding: 5px 8px;
-      font-size: clamp(0.65em, 1.6vw, 0.9em); font-weight: 700;
+    .bench-team-label {
+      color: rgba(255,255,255,0.88); text-align: center; padding: 3px 6px;
+      font-size: clamp(0.55em, 1.4vw, 0.8em); font-weight: 700;
       letter-spacing: 2px; text-transform: uppercase; flex-shrink: 0;
+      background: rgba(0,0,0,0.22);
     }
-    #bench-grid {
+    .bench-grid {
       flex: 1; display: grid; grid-template-columns: 1fr 1fr;
       gap: 10px; padding: 7px; overflow: hidden; min-height: 0;
     }
@@ -281,23 +280,25 @@
       opacity: 0.85; letter-spacing: 0.3px; pointer-events: none; z-index: 6;
       white-space: nowrap;
     }
-    #bench-footer {
-      display: flex; gap: 6px; padding: 8px; flex-shrink: 0;
+    .bench-footer {
+      display: flex; gap: 6px; padding: 5px 7px; flex-shrink: 0;
     }
-    #bench-footer button {
-      flex: 1; padding: 10px 4px; font-family: inherit;
-      font-size: clamp(0.55em, 1.3vw, 0.75em); font-weight: 900;
+    .edit-team-btn {
+      flex: 1; padding: 7px 4px; font-family: inherit;
+      font-size: clamp(0.48em, 1.1vw, 0.68em); font-weight: 900;
       letter-spacing: 1px; text-transform: uppercase;
-      border: none; border-radius: 5px; cursor: pointer; color: #fff;
+      background: #1a1a1a; border: 2px solid rgba(255,255,255,0.65);
+      border-radius: 5px; cursor: pointer; color: #fff;
       transition: opacity 0.1s;
     }
-    #bench-footer button:active { opacity: 0.7; }
-    #bench-footer #edit-team-btn { background: #1a1a1a; border: 2px solid rgba(255,255,255,0.65); }
+    .edit-team-btn:active { opacity: 0.7; }
 
-    /* Center */
-    #center {
-      flex: 1; display: flex; flex-direction: column;
-      background: #b0b0b0; min-width: 0;
+    /* Field panel (right column of each team row — 2×2 grid) */
+    .field-panel {
+      flex: 1; display: grid;
+      grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr;
+      gap: 7px; padding: 7px; min-height: 0;
+      position: relative; overflow: hidden;
     }
     #scoreboard {
       display: flex; align-items: stretch; background: #0a0a0a;
@@ -339,7 +340,7 @@
     /* Drag & drop */
     .bench-card.dragging, .field-slot.dragging { opacity: 0.35; }
     .field-slot.drag-over { outline: 3px solid rgba(255,255,255,0.85); outline-offset: -3px; }
-    #bench-grid.drag-over { outline: 2px dashed rgba(255,255,255,0.5); outline-offset: 2px; border-radius: 5px; }
+    .bench-grid.drag-over { outline: 2px dashed rgba(255,255,255,0.5); outline-offset: 2px; border-radius: 5px; }
     #drag-ghost {
       position: fixed; pointer-events: none; z-index: 9999;
       opacity: 0.88; border-radius: 7px; overflow: hidden;
@@ -347,12 +348,7 @@
       box-shadow: 0 8px 32px rgba(0,0,0,0.6);
     }
 
-    #field {
-      flex: 1; display: grid;
-      grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr;
-      gap: 9px; padding: 9px 9px 5px; min-height: 0;
-      position: relative;
-    }
+    /* .field-panel defined above — the field-slot grid lives there */
     @keyframes d-pulse {
       0%, 100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
       50% { opacity: 0.55; transform: translate(-50%, -50%) scale(0.96); }
@@ -365,13 +361,13 @@
       animation: clock-nudge 1.1s ease-in-out infinite;
       border-radius: 4px;
     }
-    #field-d-prompt {
+    .field-d-prompt {
       position: absolute; top: 50%; left: 50%;
       transform: translate(-50%, -50%);
       background: rgba(200, 30, 30, 0.92); color: #fff;
-      font-size: clamp(0.75em, 1.8vw, 1.05em); font-weight: 900;
+      font-size: clamp(0.65em, 1.6vw, 0.95em); font-weight: 900;
       letter-spacing: 2px; text-transform: uppercase;
-      padding: 10px 24px; border-radius: 10px;
+      padding: 8px 20px; border-radius: 10px;
       pointer-events: none; z-index: 10; white-space: nowrap; display: none;
       animation: d-pulse 0.9s ease-in-out infinite;
     }
@@ -408,9 +404,12 @@
       pointer-events: none; z-index: 4;
     }
 
-    #action-bar {
-      display: flex; gap: 8px; padding: 5px 9px 9px;
-      height: 80px; flex-shrink: 0;
+    #controls-strip {
+      display: flex; flex-direction: row; gap: 8px; padding: 5px 9px;
+      height: 76px; flex-shrink: 0; background: #111; align-items: stretch;
+    }
+    #turn-area {
+      position: relative; display: flex; align-items: stretch; flex-shrink: 0;
     }
     #goal-wrap {
       flex: 2; display: flex; border-radius: 7px; overflow: hidden;
@@ -452,46 +451,49 @@
     }
     #undo-btn:active { background: #c27a12; }
 
-    /* Turnovers (right) */
-    #turnovers-panel {
-      width: 20%; min-width: 130px; background: #0d0d0d;
-      display: flex; flex-direction: column; padding-bottom: 8px;
-      overflow: hidden;
-    }
+    /* Event log — right side of controls strip */
     #event-log {
-      flex: 1; min-height: 0; overflow-y: auto;
-      padding: 6px 7px; margin-top: 10px;
+      flex: 1.2; min-width: 0; overflow-y: auto;
+      padding: 3px 6px; border-left: 1px solid rgba(255,255,255,0.1);
       display: flex; flex-direction: column; gap: 0;
     }
     .event-entry {
-      font-size: clamp(0.48em, 1vw, 0.6em); font-weight: 700;
-      color: rgba(255,255,255,0.65); line-height: 1.5;
-      padding: 3px 0; border-bottom: 1px solid rgba(255,255,255,0.05);
+      font-size: clamp(0.42em, 0.9vw, 0.55em); font-weight: 700;
+      color: rgba(255,255,255,0.65); line-height: 1.45;
+      padding: 2px 0; border-bottom: 1px solid rgba(255,255,255,0.05);
       flex-shrink: 0; letter-spacing: 0.2px;
     }
     .event-goal { color: #81C784; }
     .event-to   { color: rgba(255,120,120,0.85); }
     .event-edit { color: rgba(255,255,255,0.28); font-style: italic; }
+    /* TURN button (in controls strip) */
     #turn-btn {
-      display: block; width: calc(100% - 14px); margin: 20px 7px 0;
-      padding: clamp(14px,3vh,26px) 6px; font-family: inherit;
-      font-size: clamp(1em, 2.5vw, 1.4em); font-weight: 900;
-      letter-spacing: 3px; color: #fff; background: #C62828;
-      border: none; border-radius: 5px; cursor: pointer; transition: opacity 0.1s;
+      width: auto; min-width: 72px; margin: 0;
+      padding: 0 12px; font-family: inherit;
+      font-size: clamp(0.85em, 2vw, 1.2em); font-weight: 900;
+      letter-spacing: 2px; color: #fff; background: #C62828;
+      border: none; border-radius: 7px; cursor: pointer; transition: opacity 0.1s;
     }
     #turn-btn:active { opacity: 0.65; }
+    /* Turn submenu — opens upward from #turn-area */
     #turn-menu {
-      display: flex; flex-direction: column; margin-top: 8px;
+      position: absolute; bottom: calc(100% + 5px); left: 0;
+      display: flex; flex-direction: column;
+      background: #1a1a1a; border-radius: 8px; overflow: hidden;
+      min-width: 120px; z-index: 30;
+      box-shadow: 0 -6px 24px rgba(0,0,0,0.7);
       visibility: hidden; pointer-events: none;
     }
     #turn-menu.open { visibility: visible; pointer-events: auto; }
     .to-btn {
-      display: block; width: calc(100% - 14px); margin: 0 7px 8px;
-      padding: clamp(10px,2.2vh,18px) 6px; font-family: inherit;
-      font-size: clamp(0.65em, 1.5vw, 0.9em); font-weight: 900;
+      display: block; width: 100%; margin: 0;
+      padding: 13px 16px; font-family: inherit;
+      font-size: clamp(0.62em, 1.4vw, 0.85em); font-weight: 900;
       letter-spacing: 1px; color: #fff;
-      border: none; border-radius: 5px; cursor: pointer; transition: opacity 0.1s;
+      border: none; border-bottom: 1px solid rgba(255,255,255,0.08);
+      cursor: pointer; transition: opacity 0.1s;
     }
+    .to-btn:last-child { border-bottom: none; }
     .to-btn:active { opacity: 0.65; }
     .to-throw { background: #B71C1C; }
     .to-drop  { background: #880E0E; }
@@ -752,50 +754,67 @@
     </div>
   </div>
 
-  <!-- Three-column body -->
+  <!-- Two-team body: both teams stacked vertically, controls strip between them -->
   <div id="game-body">
-  <!-- Left: Bench -->
-  <div id="bench">
-    <div id="bench-header">THE BENCH</div>
-    <div id="bench-team-label"></div>
-    <div id="bench-grid"></div>
-    <div id="bench-footer">
-      <button id="edit-team-btn">EDIT TEAM</button>
-    </div>
-  </div>
 
-  <!-- Center: Field + Actions -->
-  <div id="center">
-    <div id="field">
-      <div class="field-slot empty" data-slot="0"><span class="slot-label">PLAYER</span></div>
-      <div class="field-slot empty" data-slot="1"><span class="slot-label">PLAYER</span></div>
-      <div class="field-slot empty" data-slot="2"><span class="slot-label">PLAYER</span></div>
-      <div class="field-slot empty" data-slot="3"><span class="slot-label">PLAYER</span></div>
-      <div id="field-d-prompt">WHO GOT THE D?</div>
-    </div>
-    <div id="action-bar">
-      <div id="goal-wrap">
-        <button id="goal-btn-2pt">
-          <span class="twopt-num">2</span>
-          <span class="twopt-label">PTS</span>
-        </button>
-        <button id="goal-btn">GOAL</button>
+  <!-- Top team row (team1 — always stays at top) -->
+  <div id="team-row-1" class="team-row">
+    <div id="bench-panel-1" class="bench-panel">
+      <div class="bench-team-label" id="bench-label-1"></div>
+      <div class="bench-grid" id="bench-grid-1"></div>
+      <div class="bench-footer">
+        <button class="edit-team-btn" data-team="team1">EDIT TEAM</button>
       </div>
-      <button id="undo-btn">UNDO</button>
+    </div>
+    <div class="field-panel" id="field-1">
+      <div class="field-slot empty" data-slot="0" data-team="team1"><span class="slot-label">PLAYER</span></div>
+      <div class="field-slot empty" data-slot="1" data-team="team1"><span class="slot-label">PLAYER</span></div>
+      <div class="field-slot empty" data-slot="2" data-team="team1"><span class="slot-label">PLAYER</span></div>
+      <div class="field-slot empty" data-slot="3" data-team="team1"><span class="slot-label">PLAYER</span></div>
+      <div class="field-d-prompt" id="field-d-prompt-1">WHO GOT THE D?</div>
     </div>
   </div>
 
-  <!-- Right: Turnovers -->
-  <div id="turnovers-panel">
-    <button id="turn-btn">TURN</button>
-    <div id="turn-menu">
-      <button class="to-btn to-throw" data-to="throwaway">Throwaway</button>
-      <button class="to-btn to-drop"  data-to="drop">Drop</button>
-      <button class="to-btn to-stall" data-to="stall">Stall</button>
-      <button class="to-btn to-d"     data-to="d">D</button>
+  <!-- Controls strip (between the two team rows) -->
+  <div id="controls-strip">
+    <div id="turn-area">
+      <button id="turn-btn">TURN</button>
+      <div id="turn-menu">
+        <button class="to-btn to-throw" data-to="throwaway">Throw</button>
+        <button class="to-btn to-drop"  data-to="drop">Drop</button>
+        <button class="to-btn to-stall" data-to="stall">Stall</button>
+        <button class="to-btn to-d"     data-to="d">D</button>
+      </div>
     </div>
+    <div id="goal-wrap">
+      <button id="goal-btn-2pt">
+        <span class="twopt-num">2</span>
+        <span class="twopt-label">PTS</span>
+      </button>
+      <button id="goal-btn">GOAL</button>
+    </div>
+    <button id="undo-btn">UNDO</button>
     <div id="event-log"></div>
   </div>
+
+  <!-- Bottom team row (team2 — always stays at bottom) -->
+  <div id="team-row-2" class="team-row">
+    <div id="bench-panel-2" class="bench-panel">
+      <div class="bench-team-label" id="bench-label-2"></div>
+      <div class="bench-grid" id="bench-grid-2"></div>
+      <div class="bench-footer">
+        <button class="edit-team-btn" data-team="team2">EDIT TEAM</button>
+      </div>
+    </div>
+    <div class="field-panel" id="field-2">
+      <div class="field-slot empty" data-slot="0" data-team="team2"><span class="slot-label">PLAYER</span></div>
+      <div class="field-slot empty" data-slot="1" data-team="team2"><span class="slot-label">PLAYER</span></div>
+      <div class="field-slot empty" data-slot="2" data-team="team2"><span class="slot-label">PLAYER</span></div>
+      <div class="field-slot empty" data-slot="3" data-team="team2"><span class="slot-label">PLAYER</span></div>
+      <div class="field-d-prompt" id="field-d-prompt-2">WHO GOT THE D?</div>
+    </div>
+  </div>
+
   </div><!-- #game-body -->
 </div>
 
@@ -885,6 +904,7 @@ let timerInterval = null;
 
 // Edit modal buffer
 let editBuffer = [];
+let editTeamKey = 'team1'; // tracks which team is currently being edited
 
 // ============================================================
 // SCREEN MANAGEMENT
@@ -1166,19 +1186,13 @@ function avatarGradient(id) {
 // ============================================================
 function render() {
   if (!state.teams.team1 || !state.teams.team2) return;
-  const td = getTeamData();
-  const cfg = getCfg();
-  const textColor = cfg.darkText ? '#111' : '#fff';
-  const subTextColor = cfg.darkText ? '#333' : 'rgba(255,255,255,0.88)';
 
-  // Bench panel
-  document.getElementById('bench').style.background = cfg.bench;
-  document.getElementById('bench-header').style.color = textColor;
-  const lbl = document.getElementById('bench-team-label');
-  lbl.textContent = cfg.name;
-  lbl.style.color = subTextColor;
+  // Flex ratio: possessing team gets 2 units, defending team gets 1 unit
+  const activeIsTeam1 = state.activeTeam === 'team1';
+  document.getElementById('team-row-1').style.flex = activeIsTeam1 ? '2' : '1';
+  document.getElementById('team-row-2').style.flex = activeIsTeam1 ? '1' : '2';
 
-  // Scoreboard — background + text driven by each team's color; active/inactive state
+  // Scoreboard — color + active/inactive per team
   ['team1', 'team2'].forEach((key, i) => {
     const n = i + 1;
     const tc = getColor(state.teams[key].colorId);
@@ -1194,11 +1208,43 @@ function render() {
   document.getElementById('score-num-1').textContent  = state.score.team1;
   document.getElementById('score-num-2').textContent  = state.score.team2;
 
-  // Bench grid
+  // Render both teams
+  renderTeamBench('team1');
+  renderTeamBench('team2');
+  renderTeamField('team1');
+  renderTeamField('team2');
+
+  // Event log (in controls strip)
+  const logEl = document.getElementById('event-log');
+  if (logEl) {
+    logEl.innerHTML = '';
+    [...(state.eventLog || [])].reverse().forEach(entry => {
+      const div = document.createElement('div');
+      div.className = `event-entry event-${entry.type}`;
+      div.textContent = entry.text;
+      logEl.appendChild(div);
+    });
+  }
+}
+
+function renderTeamBench(teamKey) {
+  const n = teamKey === 'team1' ? '1' : '2';
+  const td = state.teams[teamKey];
+  const cfg = getCfg(teamKey);
+  const subTextColor = cfg.darkText ? '#333' : 'rgba(255,255,255,0.88)';
+
+  // Bench panel background + label
+  document.getElementById(`bench-panel-${n}`).style.background = cfg.bench;
+  const lbl = document.getElementById(`bench-label-${n}`);
+  lbl.textContent = cfg.name;
+  lbl.style.color = subTextColor;
+
+  // Build bench cards
   const onField = new Set(td.field.filter(Boolean));
   const benchPlayers = td.players.filter(p => !onField.has(p.id));
-  const benchGrid = document.getElementById('bench-grid');
+  const benchGrid = document.getElementById(`bench-grid-${n}`);
   benchGrid.innerHTML = '';
+
   benchPlayers.forEach(player => {
     const card = document.createElement('div');
     card.className = 'bench-card';
@@ -1209,6 +1255,7 @@ function render() {
     av.className = 'avatar';
     av.style.background = cfg.swatch;
     av.style.color = cfg.darkText ? '#111' : '#fff';
+
     const nameEl = document.createElement('span');
     nameEl.className = 'card-name';
     nameEl.textContent = player.name;
@@ -1244,15 +1291,21 @@ function render() {
       av.appendChild(nm);
     }
 
-    card.addEventListener('pointerdown', e => startDrag(e, player.id, null));
-    card.addEventListener('click', () => { if (justDragged) return; onBenchClick(player.id); });
+    card.addEventListener('pointerdown', e => startDrag(e, player.id, null, teamKey));
+    card.addEventListener('click', () => { if (justDragged) return; onBenchClick(player.id, teamKey); });
     benchGrid.appendChild(card);
   });
-  // Sync row track height to column width (aspect-ratio not propagated by grid track sizing)
-  requestAnimationFrame(syncBenchRows);
 
-  // Field slots
-  document.querySelectorAll('.field-slot').forEach((slot, i) => {
+  requestAnimationFrame(() => syncBenchRows(`bench-grid-${n}`));
+}
+
+function renderTeamField(teamKey) {
+  const n = teamKey === 'team1' ? '1' : '2';
+  const td = state.teams[teamKey];
+  const cfg = getCfg(teamKey);
+  const isActive = state.activeTeam === teamKey;
+
+  document.querySelectorAll(`#field-${n} .field-slot`).forEach((slot, i) => {
     const pid = td.field[i];
     slot.className = 'field-slot';
     slot.innerHTML = '';
@@ -1308,32 +1361,23 @@ function render() {
 
     if (pid === td.discHolder) slot.classList.add('has-disc');
 
-
-    slot.addEventListener('pointerdown', e => startDrag(e, pid, i));
-    slot.onclick = () => { if (justDragged) return; onFieldClick(i); };
+    slot.addEventListener('pointerdown', e => startDrag(e, pid, i, teamKey));
+    // Only register touch clicks for the active (offence) team
+    if (isActive) {
+      slot.onclick = () => { if (justDragged) return; onFieldClick(i, teamKey); };
+    }
   });
-  // Show/hide the D pickup prompt
-  const dPrompt = document.getElementById('field-d-prompt');
-  if (dPrompt) dPrompt.style.display = td.turnoverUnknown ? 'flex' : 'none';
 
-  // Event log
-  const logEl = document.getElementById('event-log');
-  if (logEl) {
-    logEl.innerHTML = '';
-    [...(state.eventLog || [])].reverse().forEach(entry => {
-      const div = document.createElement('div');
-      div.className = `event-entry event-${entry.type}`;
-      div.textContent = entry.text;
-      logEl.appendChild(div);
-    });
-  }
+  // Show/hide D pickup prompt for this team's field
+  const dPrompt = document.getElementById(`field-d-prompt-${n}`);
+  if (dPrompt) dPrompt.style.display = (isActive && td.turnoverUnknown) ? 'flex' : 'none';
 }
 
 // ============================================================
 // GAME INTERACTIONS
 // ============================================================
-function onBenchClick(pid) {
-  const td = getTeamData();
+function onBenchClick(pid, teamKey) {
+  const td = state.teams[teamKey];
   const emptyIdx = td.field.indexOf(null);
   if (emptyIdx === -1) return;
   pushHistory();
@@ -1341,8 +1385,10 @@ function onBenchClick(pid) {
   saveState(); render();
 }
 
-function onFieldClick(idx) {
-  const td = getTeamData();
+function onFieldClick(idx, teamKey) {
+  // Only active (offence) team can log touches
+  if (teamKey !== state.activeTeam) return;
+  const td = state.teams[teamKey];
   const pid = td.field[idx];
   if (!pid) return;
   // Re-clicking the current disc holder is a no-op — green stays, no extra touch
@@ -1520,9 +1566,10 @@ function saveState() {
 // ============================================================
 // EDIT TEAM MODAL
 // ============================================================
-function openEditModal() {
-  const td = getTeamData();
-  const cfg = getCfg();
+function openEditModal(teamKey) {
+  editTeamKey = teamKey || state.activeTeam;
+  const td = getTeamData(editTeamKey);
+  const cfg = getCfg(editTeamKey);
   editBuffer = td.players.map(p => ({ ...p }));
   document.getElementById('edit-modal-title').textContent = `EDIT ${cfg.name}`;
   renderEditList();
@@ -1565,7 +1612,7 @@ function addPlayerToModal() {
 }
 
 function saveEditModal() {
-  const td = getTeamData();
+  const td = getTeamData(editTeamKey);
   td.players = editBuffer.filter(p => p.name.trim()).map(p => ({ ...p, name: p.name.trim(), number: p.number.trim() }));
   const validIds = new Set(td.players.map(p => p.id));
   td.field = td.field.map(pid => (validIds.has(pid) ? pid : null));
@@ -1581,12 +1628,12 @@ let drag = null;
 let justDragged = false;
 const DRAG_THRESHOLD = 8;
 
-function startDrag(e, playerId, fromSlot) {
+function startDrag(e, playerId, fromSlot, teamKey) {
   if (e.pointerType === 'mouse' && e.button !== 0) return;
   e.preventDefault();
   const sourceEl = e.currentTarget;
   drag = {
-    playerId, fromSlot, sourceEl, ghost: null,
+    playerId, fromSlot, teamKey, sourceEl, ghost: null,
     startX: e.clientX, startY: e.clientY, didDrag: false,
     rect: sourceEl.getBoundingClientRect(),
     pointerId: e.pointerId,
@@ -1634,9 +1681,19 @@ function getDragTarget(x, y) {
   if (!drag) return null;
   const el = document.elementFromPoint(x, y);
   if (!el) return null;
+  // Field slot — only accept slots belonging to the same team
   const slot = el.closest('.field-slot');
-  if (slot) return slot;
-  if (drag.fromSlot !== null && el.closest('#bench')) return document.getElementById('bench-grid');
+  if (slot && slot.dataset.team === drag.teamKey) return slot;
+  // Bench grid — only allow field→bench (not bench→bench), same team
+  if (drag.fromSlot !== null) {
+    const bp = el.closest('.bench-panel');
+    if (bp) {
+      const targetTeam = bp.id === 'bench-panel-1' ? 'team1' : 'team2';
+      if (targetTeam === drag.teamKey) {
+        return bp.querySelector('.bench-grid');
+      }
+    }
+  }
   return null;
 }
 
@@ -1659,7 +1716,7 @@ function onDragEnd(e) {
 
 function executeDrop(target) {
   if (!target || !drag) return;
-  const td = getTeamData();
+  const td = state.teams[drag.teamKey];
   if (target.classList.contains('field-slot')) {
     const toSlot = parseInt(target.dataset.slot);
     if (drag.fromSlot === toSlot) return;
@@ -1674,7 +1731,7 @@ function executeDrop(target) {
       td.field[drag.fromSlot] = displaced;
     }
     saveState(); render();
-  } else if (target.id === 'bench-grid') {
+  } else if (target.classList.contains('bench-grid')) {
     // field → bench
     pushHistory();
     td.field[drag.fromSlot] = null;
@@ -1792,8 +1849,10 @@ document.getElementById('start-game-btn').addEventListener('click', validateAndS
 document.getElementById('add-team1').addEventListener('click', () => addSetupPlayer('team1'));
 document.getElementById('add-team2').addEventListener('click', () => addSetupPlayer('team2'));
 
-// Game
-document.getElementById('edit-team-btn').addEventListener('click', openEditModal);
+// Game — edit team buttons (one per bench panel)
+document.querySelectorAll('.edit-team-btn').forEach(btn => {
+  btn.addEventListener('click', () => openEditModal(btn.dataset.team));
+});
 document.getElementById('score-section-1').addEventListener('click', () => {
   if (state.activeTeam !== 'team1') switchTeam();
 });
@@ -1859,8 +1918,8 @@ if ('serviceWorker' in navigator) {
 // so row tracks end up too short and cards overlap. Fix: explicitly
 // set grid-auto-rows to the computed column track width.
 // ============================================================
-function syncBenchRows() {
-  const grid = document.getElementById('bench-grid');
+function syncBenchRows(gridId) {
+  const grid = document.getElementById(gridId);
   if (!grid) return;
   const cards = grid.querySelectorAll('.bench-card');
   const n = cards.length;
@@ -1883,8 +1942,12 @@ function syncBenchRows() {
   // Hide pt/stat badges when cards are too small to show them clearly
   grid.classList.toggle('bench-compact', size < 70);
 }
-// Re-sync whenever the bench panel is resized
-new ResizeObserver(syncBenchRows).observe(document.getElementById('bench-grid'));
+// Re-sync whenever either bench panel resizes
+const _benchResizeObs = new ResizeObserver(entries => {
+  entries.forEach(e => syncBenchRows(e.target.id));
+});
+_benchResizeObs.observe(document.getElementById('bench-grid-1'));
+_benchResizeObs.observe(document.getElementById('bench-grid-2'));
 
 // ============================================================
 // INIT
