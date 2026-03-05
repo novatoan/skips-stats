@@ -241,8 +241,7 @@
     }
     #bench-grid {
       flex: 1; display: grid; grid-template-columns: 1fr 1fr;
-      gap: 10px; padding: 7px; align-content: start;
-      overflow-y: auto; min-height: 0;
+      gap: 10px; padding: 7px; overflow: hidden; min-height: 0;
     }
     .bench-card {
       border-radius: 7px; overflow: hidden; cursor: pointer; position: relative;
@@ -250,15 +249,16 @@
       user-select: none; -webkit-user-select: none;
       touch-action: none;
       transition: transform 0.08s, box-shadow 0.08s;
-      aspect-ratio: 1;
     }
     .bench-card:active { transform: scale(0.92); box-shadow: 0 0 14px rgba(255,255,255,0.2); }
     .bench-card .avatar {
-      width: 100%; aspect-ratio: 1; position: relative;
+      width: 100%; height: 100%; position: relative;
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       font-size: clamp(0.75em, 2.2vw, 1.3em); font-weight: 900; color: #fff;
       text-align: center; padding: 6px; word-break: break-word; line-height: 1.2;
     }
+    .bench-compact .pt-badge,
+    .bench-compact .stat-badge { display: none; }
     .bench-card .card-name {
       display: block; text-align: center; width: 100%;
     }
@@ -1824,9 +1824,26 @@ if ('serviceWorker' in navigator) {
 function syncBenchRows() {
   const grid = document.getElementById('bench-grid');
   if (!grid) return;
-  // bench-grid has padding: 7px on each side (14px total) and a 10px column gap
-  const colW = (grid.clientWidth - 14 - 10) / 2;
-  if (colW > 0) grid.style.gridAutoRows = colW + 'px';
+  const cards = grid.querySelectorAll('.bench-card');
+  const n = cards.length;
+  if (n === 0) return;
+
+  const pad = 14;  // 7px padding × 2 sides
+  const gap = 10;  // gap between columns / rows
+  const cols = 2;
+  const rows = Math.ceil(n / cols);
+
+  const colW = (grid.clientWidth - pad - gap) / cols;
+  const availH = grid.clientHeight - pad - (rows - 1) * gap;
+  if (colW <= 0 || availH <= 0) return;
+
+  // Square when there's room; shrink row height to fit all cards when crowded
+  const rowH = Math.max(Math.floor(availH / rows), 24);
+  const size = Math.min(colW, rowH);
+  grid.style.gridAutoRows = size + 'px';
+
+  // Hide pt/stat badges when cards are too small to show them clearly
+  grid.classList.toggle('bench-compact', size < 70);
 }
 // Re-sync whenever the bench panel is resized
 new ResizeObserver(syncBenchRows).observe(document.getElementById('bench-grid'));
