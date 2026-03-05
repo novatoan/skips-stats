@@ -1418,7 +1418,7 @@ function onFieldClick(idx, teamKey) {
 }
 
 function getPlayerStat(pid) {
-  if (!state.stats[pid]) state.stats[pid] = { goals1: 0, goals2: 0, assists: 0, ds: 0, turnovers: 0, touches: 0 };
+  if (!state.stats[pid]) state.stats[pid] = { goals1: 0, goals2: 0, assists: 0, ds: 0, turnovers: 0, touches: 0, pm: 0 };
   return state.stats[pid];
 }
 
@@ -1446,6 +1446,14 @@ function onTurnover(type) {
 function onGoal(points = 1) {
   pushHistory();
   state.score[state.activeTeam] += points;
+  // +/- for all players currently on field
+  const otherKey = state.activeTeam === 'team1' ? 'team2' : 'team1';
+  state.teams[state.activeTeam].field.forEach(pid => {
+    if (pid) getPlayerStat(pid).pm = (getPlayerStat(pid).pm || 0) + points;
+  });
+  state.teams[otherKey].field.forEach(pid => {
+    if (pid) getPlayerStat(pid).pm = (getPlayerStat(pid).pm || 0) - points;
+  });
   const td = getTeamData();
   if (td.discHolder) {
     const st = getPlayerStat(td.discHolder);
@@ -1525,6 +1533,9 @@ function tickTimer() {
 
 function fmtPT(s) {
   return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+}
+function fmtPM(n) {
+  return n > 0 ? '+' + n : String(n);
 }
 
 function tickPlayTimes() {
@@ -1771,12 +1782,12 @@ function showStats() {
     const table = document.createElement('table');
     table.className = 'stats-table';
     table.innerHTML = `<thead><tr>
-      <th>NAME</th><th>#</th><th>TCH</th><th>1PT</th><th>2PT</th><th>PTS</th><th>AST</th><th>TO</th><th>D</th><th>TIME</th>
+      <th>NAME</th><th>#</th><th>TCH</th><th>1PT</th><th>2PT</th><th>PTS</th><th>AST</th><th>TO</th><th>D</th><th>+/-</th><th>TIME</th>
     </tr></thead>`;
     const tbody = document.createElement('tbody');
 
     team.players.forEach(p => {
-      const st = state.stats[p.id] || { goals1: 0, goals2: 0, assists: 0, ds: 0, turnovers: 0, touches: 0 };
+      const st = state.stats[p.id] || { goals1: 0, goals2: 0, assists: 0, ds: 0, turnovers: 0, touches: 0, pm: 0 };
       const totalPts = st.goals1 + st.goals2 * 2;
       const pt = state.playTime[p.id] || 0;
       const tr = document.createElement('tr');
@@ -1790,6 +1801,7 @@ function showStats() {
         <td>${st.assists || 0}</td>
         <td>${st.turnovers}</td>
         <td>${st.ds || 0}</td>
+        <td>${fmtPM(st.pm || 0)}</td>
         <td>${fmtPT(pt)}</td>`;
       tbody.appendChild(tr);
     });
@@ -1803,7 +1815,7 @@ function showStats() {
     tfoot.innerHTML = `<tr class="stats-totals-row">
       <td colspan="5" style="text-align:right">TOTAL</td>
       <td class="pts-total"><strong>${teamTotalPts}</strong></td>
-      <td colspan="4"></td>
+      <td colspan="5"></td>
     </tr>`;
     table.appendChild(tbody);
     table.appendChild(tfoot);
@@ -1815,17 +1827,17 @@ function showStats() {
 }
 
 function exportCSV() {
-  const rows = [['Team','Name','Number','Touches','1pt Goals','2pt Goals','Total Pts','Assists','Turnovers','Ds','Play Time']];
+  const rows = [['Team','Name','Number','Touches','1pt Goals','2pt Goals','Total Pts','Assists','Turnovers','Ds','+/-','Play Time']];
   ['team1', 'team2'].forEach(key => {
     const team = state.teams[key];
     if (!team) return;
     team.players.forEach(p => {
-      const st = state.stats[p.id] || { goals1: 0, goals2: 0, assists: 0, ds: 0, turnovers: 0, touches: 0 };
+      const st = state.stats[p.id] || { goals1: 0, goals2: 0, assists: 0, ds: 0, turnovers: 0, touches: 0, pm: 0 };
       const totalPts = st.goals1 + st.goals2 * 2;
       const pt = state.playTime[p.id] || 0;
       rows.push([
         team.name || key, p.name, p.number || '',
-        st.touches || 0, st.goals1, st.goals2, totalPts, st.assists || 0, st.turnovers, st.ds || 0, fmtPT(pt)
+        st.touches || 0, st.goals1, st.goals2, totalPts, st.assists || 0, st.turnovers, st.ds || 0, st.pm || 0, fmtPT(pt)
       ]);
     });
   });
