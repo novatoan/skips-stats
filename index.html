@@ -624,6 +624,10 @@
       font-size: clamp(0.8em, 2vw, 1.1em); font-weight: 900;
       letter-spacing: 3px; color: #fff; margin: 0 0 10px;
       padding-bottom: 6px; border-bottom: 2px solid #333;
+      display: flex; align-items: baseline; justify-content: space-between;
+    }
+    .stats-score-badge {
+      font-size: 2.4em; font-weight: 900; letter-spacing: 0; line-height: 1;
     }
     .stats-table {
       width: 100%; border-collapse: collapse;
@@ -643,6 +647,12 @@
     .stats-table td:first-child { text-align: left; font-weight: 700; }
     .stats-table tr:last-child td { border-bottom: none; }
     .stats-table .col-num { color: rgba(255,255,255,0.5); font-weight: 400; }
+    .stats-totals-row td {
+      border-top: 2px solid #2a2a2a; border-bottom: none;
+      padding-top: 9px; color: rgba(255,255,255,0.4);
+      font-size: 0.9em; letter-spacing: 1px; text-transform: uppercase;
+    }
+    .stats-totals-row .pts-total { color: #fff; font-weight: 900; }
   </style>
 </head>
 <body>
@@ -1697,7 +1707,8 @@ function showStats() {
     const nameEl = document.createElement('div');
     nameEl.className = 'stats-team-name';
     nameEl.style.color = color.swatch;
-    nameEl.textContent = team.name || key.toUpperCase();
+    const teamScore = state.score[key] || 0;
+    nameEl.innerHTML = `<span>${team.name || key.toUpperCase()}</span><span class="stats-score-badge">${teamScore}</span>`;
     block.appendChild(nameEl);
 
     const table = document.createElement('table');
@@ -1726,7 +1737,19 @@ function showStats() {
       tbody.appendChild(tr);
     });
 
+    // Totals row — sum of PTS column, should equal team score
+    const teamTotalPts = team.players.reduce((sum, p) => {
+      const st = state.stats[p.id] || {};
+      return sum + (st.goals1 || 0) + (st.goals2 || 0) * 2;
+    }, 0);
+    const tfoot = document.createElement('tfoot');
+    tfoot.innerHTML = `<tr class="stats-totals-row">
+      <td colspan="5" style="text-align:right">TOTAL</td>
+      <td class="pts-total"><strong>${teamTotalPts}</strong></td>
+      <td colspan="4"></td>
+    </tr>`;
     table.appendChild(tbody);
+    table.appendChild(tfoot);
     block.appendChild(table);
     content.appendChild(block);
   });
