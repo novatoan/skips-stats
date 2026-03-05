@@ -255,12 +255,15 @@
     .bench-card:active { transform: scale(0.92); box-shadow: 0 0 14px rgba(255,255,255,0.2); }
     .bench-card .avatar {
       width: 100%; aspect-ratio: 1; position: relative;
-      display: flex; align-items: center; justify-content: center;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
       font-size: clamp(0.75em, 2.2vw, 1.3em); font-weight: 900; color: #fff;
-      text-align: center; padding: 6px 6px 26px 6px; word-break: break-word; line-height: 1.2;
+      text-align: center; padding: 6px; word-break: break-word; line-height: 1.2;
     }
     .bench-card .card-name {
       display: block; text-align: center; width: 100%;
+    }
+    .bench-card .num-badge {
+      position: static; transform: none; font-size: 1em; opacity: 0.85;
     }
     .pt-badge {
       position: absolute; bottom: 4px; right: 5px;
@@ -379,9 +382,12 @@
     }
     .field-avatar {
       flex: 1; min-height: 0; width: 100%; position: relative;
-      display: flex; align-items: center; justify-content: center;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
       font-size: clamp(0.9em, 2.2vw, 1.5em); font-weight: 900; color: #fff;
       text-align: center; padding: 8px; word-break: break-word; line-height: 1.2;
+    }
+    .field-avatar .num-badge {
+      position: static; transform: none; font-size: 1em; opacity: 0.85;
     }
     /* .field-slot .pname replaced by .num-badge */
     .field-slot.has-disc { }
@@ -1249,16 +1255,17 @@ function render() {
     av.className = 'field-avatar';
     av.style.background = cfg.swatch;
     av.style.color = cfg.darkText ? '#111' : '#fff';
-    av.textContent = player.name;
-    slot.appendChild(av);
-
+    const nameSpan = document.createElement('span');
+    nameSpan.textContent = player.name;
+    av.appendChild(nameSpan);
     if (player.number && player.number.trim()) {
       const nm = document.createElement('span');
       nm.className = 'num-badge';
       nm.style.color = cfg.darkText ? 'rgba(0,0,0,0.75)' : 'rgba(255,255,255,0.85)';
       nm.textContent = '#' + player.number.trim();
-      slot.appendChild(nm);
+      av.appendChild(nm);
     }
+    slot.appendChild(av);
 
     const ptF = document.createElement('span');
     ptF.className = 'pt-badge';
