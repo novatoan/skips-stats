@@ -1598,11 +1598,13 @@ function renderEditList() {
     const numInp = document.createElement('input');
     numInp.type = 'text'; numInp.className = 'modal-num-input';
     numInp.value = p.number || ''; numInp.placeholder = '#'; numInp.maxLength = 3;
+    numInp.inputMode = 'numeric';
     numInp.addEventListener('input', e => { editBuffer[i].number = e.target.value; });
 
     const nameInp = document.createElement('input');
     nameInp.type = 'text'; nameInp.className = 'modal-name-input';
     nameInp.value = p.name; nameInp.placeholder = 'Player name';
+    nameInp.inputMode = 'text';
     nameInp.addEventListener('input', e => { editBuffer[i].name = e.target.value; });
 
     const del = document.createElement('button');
@@ -1617,10 +1619,10 @@ function renderEditList() {
 function addPlayerToModal() {
   editBuffer.push({ id: `${state.activeTeam}_${Date.now()}`, name: '', number: '' });
   renderEditList();
-  setTimeout(() => {
-    const inputs = document.querySelectorAll('#edit-player-list .modal-name-input');
-    if (inputs.length) inputs[inputs.length - 1].focus();
-  }, 30);
+  // Call focus synchronously within the click handler (user gesture) so iOS shows keyboard.
+  // renderEditList() is synchronous — the new input is in the DOM by this line.
+  const inputs = document.querySelectorAll('#edit-player-list .modal-name-input');
+  if (inputs.length) inputs[inputs.length - 1].focus();
 }
 
 function saveEditModal() {
@@ -1902,9 +1904,10 @@ document.getElementById('app') && document.getElementById('app')
   }, { passive: false });
 
 // iOS standalone PWA keyboard fix:
-// In homescreen/standalone mode iOS doesn't auto-raise the keyboard on input tap.
-// Explicitly calling focus() from a capture-phase touchend handler reliably fixes this.
-document.addEventListener('touchend', function(e) {
+// In homescreen/standalone mode, iOS WKWebView decides whether to show the keyboard
+// at touchstart time — by touchend the decision has already been made.
+// Calling focus() in the capture phase of touchstart is the reliable fix.
+document.addEventListener('touchstart', function(e) {
   const el = e.target;
   if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
     el.focus();
