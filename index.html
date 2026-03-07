@@ -372,6 +372,7 @@
       animation: d-pulse 0.9s ease-in-out infinite;
     }
     .field-slot {
+      container-type: size;
       border-radius: 9px; overflow: hidden; position: relative;
       cursor: pointer; user-select: none; -webkit-user-select: none;
       touch-action: none;
@@ -398,7 +399,7 @@
     .field-slot.has-disc .field-avatar::after {
       content: ''; position: absolute;
       top: 50%; left: 50%; transform: translate(-50%, -50%);
-      width: 72%; aspect-ratio: 1;
+      width: 72cqmin; aspect-ratio: 1;
       border: 5px solid #4CAF50; border-radius: 50%;
       box-shadow: 0 0 18px rgba(76,175,80,0.75);
       pointer-events: none; z-index: 4;
