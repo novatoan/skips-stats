@@ -463,6 +463,10 @@
       color: rgba(255,255,255,0.65); line-height: 1.45;
       padding: 2px 0; border-bottom: 1px solid rgba(255,255,255,0.05);
       flex-shrink: 0; letter-spacing: 0.2px;
+      display: flex; justify-content: space-between; gap: 6px;
+    }
+    .event-time {
+      opacity: 0.55; white-space: nowrap; flex-shrink: 0;
     }
     .event-goal { color: #81C784; }
     .event-to   { color: rgba(255,120,120,0.85); }
@@ -1225,7 +1229,7 @@ function render() {
     [...(state.eventLog || [])].reverse().forEach(entry => {
       const div = document.createElement('div');
       div.className = `event-entry event-${entry.type}`;
-      div.textContent = `${fmtPT(entry.t ?? 0)}  ${entry.text}`;
+      div.innerHTML = `<span>${entry.text}</span><span class="event-time">${fmtPT(entry.t ?? 0)}</span>`;
       logEl.appendChild(div);
     });
   }
