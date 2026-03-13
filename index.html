@@ -907,8 +907,8 @@ let timerInterval = null;
 let editBuffer = [];
 let editTeamKey = 'team1'; // tracks which team is currently being edited
 
-// UI-only: which team row is visually expanded; follows possession by default
-let focusTeam = 'team1';
+// UI-only: which team row is visually expanded; null until first possession is assigned
+let focusTeam = null;
 
 // ============================================================
 // SCREEN MANAGEMENT
@@ -946,7 +946,7 @@ function resumeGame() {
     if (!state.eventLog) state.eventLog = [];   // backfill for saves predating event log
     timerSeconds = parsed.timerSeconds ?? 0;
     timerRunning = false;
-    focusTeam = state.activeTeam; // sync view focus to restored possession
+    focusTeam = state.activeTeam || null; // sync view focus to restored possession (null = unassigned)
     updateTimerDisplay();
     showScreen('game-screen');
     render();
@@ -1124,7 +1124,7 @@ function buildGameState() {
   state.score = { team1: 0, team2: 0 };
   state.playTime = {};
   state.stats = {};
-  state.activeTeam = 'team1';
+  state.activeTeam = null; // no possession until a player is intentionally clicked
   state.history = [];
   state.eventLog = [];
 }
@@ -1192,10 +1192,9 @@ function avatarGradient(id) {
 function render() {
   if (!state.teams.team1 || !state.teams.team2) return;
 
-  // Flex ratio: focused team gets 2 units, other team gets 1 unit (view-only, not possession)
-  const focusIsTeam1 = focusTeam === 'team1';
-  document.getElementById('team-row-1').style.flex = focusIsTeam1 ? '2' : '1';
-  document.getElementById('team-row-2').style.flex = focusIsTeam1 ? '1' : '2';
+  // Flex ratio: focused team gets 2 units, other gets 1; equal when no possession yet
+  document.getElementById('team-row-1').style.flex = focusTeam === 'team1' ? '2' : (focusTeam === 'team2' ? '1' : '1');
+  document.getElementById('team-row-2').style.flex = focusTeam === 'team2' ? '2' : (focusTeam === 'team1' ? '1' : '1');
 
   // Scoreboard — color + active/inactive per team
   ['team1', 'team2'].forEach((key, i) => {
@@ -1308,7 +1307,8 @@ function renderTeamField(teamKey) {
   const n = teamKey === 'team1' ? '1' : '2';
   const td = state.teams[teamKey];
   const cfg = getCfg(teamKey);
-  const isActive = state.activeTeam === teamKey;
+  // Active = has possession, OR possession not yet assigned (either team can receive first click)
+  const isActive = state.activeTeam === null || state.activeTeam === teamKey;
 
   document.querySelectorAll(`#field-${n} .field-slot`).forEach((slot, i) => {
     const pid = td.field[i];
@@ -1391,6 +1391,11 @@ function onBenchClick(pid, teamKey) {
 }
 
 function onFieldClick(idx, teamKey) {
+  // If possession not yet assigned, first click claims it for this team
+  if (state.activeTeam === null) {
+    state.activeTeam = teamKey;
+    focusTeam = teamKey;
+  }
   // Only active (offence) team can log touches
   if (teamKey !== state.activeTeam) return;
   const td = state.teams[teamKey];
@@ -1428,6 +1433,7 @@ function getPlayerStat(pid) {
 }
 
 function onTurnover(type) {
+  if (!state.activeTeam) return; // possession not yet assigned
   pushHistory();
   const td = getTeamData();
   // All turnover types credit the disc holder
@@ -1450,6 +1456,7 @@ function onTurnover(type) {
 }
 
 function onGoal(points = 1) {
+  if (!state.activeTeam) return; // possession not yet assigned
   pushHistory();
   state.score[state.activeTeam] += points;
   // +/- for all players currently on field
