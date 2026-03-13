@@ -139,7 +139,7 @@
       border-bottom: 3px solid var(--panel-text);
       color: var(--panel-text); font-family: inherit;
       font-size: clamp(1.2em, 3vw, 1.8em); font-weight: 900;
-      letter-spacing: 3px; text-transform: uppercase;
+      letter-spacing: 3px;
       width: 100%; padding: 6px 0; outline: none; margin-bottom: 14px;
     }
     .team-name-input::placeholder { color: var(--panel-sub); }
@@ -235,7 +235,7 @@
     .bench-team-label {
       color: rgba(255,255,255,0.88); text-align: center; padding: 3px 6px;
       font-size: clamp(0.55em, 1.4vw, 0.8em); font-weight: 700;
-      letter-spacing: 2px; text-transform: uppercase; flex-shrink: 0;
+      letter-spacing: 2px; flex-shrink: 0;
       background: rgba(0,0,0,0.22);
     }
     .bench-grid {
@@ -1111,7 +1111,7 @@ function buildGameState() {
         number: p.number.trim(),
       }));
     state.teams[key] = {
-      name: s.name.trim().toUpperCase(),
+      name: s.name.trim(),
       colorId: s.colorId,
       players,
       field: [null, null, null, null],
