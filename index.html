@@ -1532,6 +1532,17 @@ function pushHistory() {
 function toggleTimer() {
   if (timerRunning) {
     clearInterval(timerInterval); timerRunning = false;
+    // Clear possession on pause — either team can start with disc when play resumes
+    state.activeTeam = null;
+    focusTeam = null;
+    for (const key of ['team1', 'team2']) {
+      if (state.teams[key]) {
+        state.teams[key].discHolder = null;
+        state.teams[key].prevDiscHolder = null;
+        state.teams[key].turnoverUnknown = false;
+      }
+    }
+    saveState(); render();
   } else {
     timerInterval = setInterval(tickTimer, 1000); timerRunning = true;
     const wrap = document.getElementById('timer-wrap');
