@@ -660,6 +660,41 @@
       font-size: 0.9em; letter-spacing: 1px; text-transform: uppercase;
     }
     .stats-totals-row .pts-total { color: #fff; font-weight: 900; }
+
+    /* ── TRACKING MODE TOGGLE ────────────────────────── */
+    #tracking-mode-row {
+      display: flex; align-items: center; justify-content: center;
+      gap: 10px; padding: 10px 16px 0; flex-shrink: 0;
+    }
+    .mode-seg { display: flex; border-radius: 8px; overflow: hidden; border: 1.5px solid #444; }
+    .mode-seg-btn {
+      flex: 1; padding: 8px 18px; background: #1a1a1a; color: #aaa;
+      font-family: inherit; font-size: 0.85em; font-weight: 700; letter-spacing: 1px;
+      text-transform: uppercase; border: none; cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+    .mode-seg-btn.active { background: #2a7a2a; color: #fff; }
+
+    /* ── SINGLE-MODE STRIP (opponent row) ────────────── */
+    #team-row-2.single-strip {
+      flex: none !important;
+      height: 60px; min-height: 0;
+      transition: height 0.2s;
+    }
+    #team-row-2.single-strip.opp-has-disc { height: 90px; }
+    #opponent-strip {
+      display: none;
+      width: 100%; height: 100%; align-items: center; padding: 0 16px; gap: 12px;
+    }
+    #team-row-2.single-strip #opponent-strip { display: flex; }
+    #opp-color-bar { width: 8px; height: 40px; border-radius: 4px; flex-shrink: 0; }
+    #opp-name-label { font-size: 1em; font-weight: 700; flex: 1; color: #fff; letter-spacing: 1px; }
+    #opp-score-label { font-size: 1.6em; font-weight: 900; color: #fff; }
+
+    /* ── PANEL-TEAM2 COLLAPSE (single mode setup) ────── */
+    #panel-team2.single-collapsed .players-header,
+    #panel-team2.single-collapsed .player-list,
+    #panel-team2.single-collapsed .add-btn { display: none; }
   </style>
 </head>
 <body>
@@ -707,6 +742,12 @@
   <div id="setup-game-name-row">
     <input id="game-name-input" type="text" maxlength="40"
       placeholder="GAME NAME" autocomplete="off" spellcheck="false">
+  </div>
+  <div id="tracking-mode-row">
+    <div class="mode-seg">
+      <button class="mode-seg-btn active" id="mode-btn-single" onclick="setTrackingMode('single')">MY TEAM</button>
+      <button class="mode-seg-btn" id="mode-btn-dual" onclick="setTrackingMode('dual')">BOTH TEAMS</button>
+    </div>
   </div>
   <div id="setup-body">
     <!-- Team 1 -->
@@ -804,6 +845,12 @@
 
   <!-- Bottom team row (team2 — always stays at bottom) -->
   <div id="team-row-2" class="team-row">
+    <!-- Single-mode opponent strip (shown instead of bench+field in single mode) -->
+    <div id="opponent-strip">
+      <div id="opp-color-bar"></div>
+      <div id="opp-name-label">Opponent</div>
+      <div id="opp-score-label">0</div>
+    </div>
     <div id="bench-panel-2" class="bench-panel">
       <div class="bench-team-label" id="bench-label-2"></div>
       <div class="bench-grid" id="bench-grid-2"></div>
@@ -890,6 +937,7 @@ let state = {
   view: 'home',
   setup: {
     gameName: '',
+    mode: 'single',
     team1: { name: 'Dark',  colorId: 'black', players: [{ number: '', name: '' }] },
     team2: { name: 'Light', colorId: 'white', players: [{ number: '', name: '' }] },
   },
@@ -932,8 +980,10 @@ function initHome() {
 
 function startNewGame() {
   localStorage.removeItem('gt_save');
+  const prevMode = (state.setup && state.setup.mode) || 'single'; // preserve mode preference
   state.setup = {
     gameName: '',
+    mode: prevMode,
     team1: { name: 'Dark',  colorId: 'black', players: [{ number: '', name: '' }] },
     team2: { name: 'Light', colorId: 'white', players: [{ number: '', name: '' }] },
   };
@@ -947,7 +997,8 @@ function resumeGame() {
   try {
     const parsed = JSON.parse(saved);
     state = parsed.state;
-    if (!state.eventLog) state.eventLog = [];   // backfill for saves predating event log
+    if (!state.eventLog) state.eventLog = [];              // backfill for saves predating event log
+    if (!state.trackingMode) state.trackingMode = 'dual';  // backfill: old saves had two full teams
     timerSeconds = parsed.timerSeconds ?? 0;
     timerRunning = false;
     focusTeam = state.activeTeam || null; // sync view focus to restored possession (null = unassigned)
@@ -986,6 +1037,9 @@ function initSetupScreen() {
   if (!state.setup.gameName) state.setup.gameName = defaultGameName();
   gnInput.value = state.setup.gameName;
   gnInput.oninput = e => { state.setup.gameName = e.target.value; };
+  // Apply tracking mode UI
+  updateModeToggleUI();
+  applySetupModeLayout();
 }
 
 function updatePanelColor(key) {
@@ -1065,6 +1119,32 @@ function renderSetupPlayers(key) {
   });
 }
 
+// ============================================================
+// TRACKING MODE HELPERS
+// ============================================================
+function setTrackingMode(mode) {
+  if (!state.setup) state.setup = {};
+  state.setup.mode = mode;
+  updateModeToggleUI();
+  applySetupModeLayout();
+}
+
+function updateModeToggleUI() {
+  const mode = (state.setup && state.setup.mode) || 'single';
+  const btnSingle = document.getElementById('mode-btn-single');
+  const btnDual   = document.getElementById('mode-btn-dual');
+  if (btnSingle) btnSingle.classList.toggle('active', mode === 'single');
+  if (btnDual)   btnDual.classList.toggle('active',   mode === 'dual');
+}
+
+function applySetupModeLayout() {
+  const isSingle = ((state.setup && state.setup.mode) || 'single') === 'single';
+  const panel2 = document.getElementById('panel-team2');
+  if (panel2) panel2.classList.toggle('single-collapsed', isSingle);
+  const nameInput2 = document.getElementById('name-team2');
+  if (nameInput2) nameInput2.placeholder = isSingle ? 'Opponent name' : 'Team name';
+}
+
 function addSetupPlayer(key) {
   state.setup[key].players.push({ number: '', name: '' });
   renderSetupPlayers(key);
@@ -1083,7 +1163,9 @@ function validateAndStartGame() {
       return;
     }
   }
-  for (const key of ['team1', 'team2']) {
+  const isSingle = ((state.setup && state.setup.mode) || 'single') === 'single';
+  const keysToCheck = isSingle ? ['team1'] : ['team1', 'team2'];
+  for (const key of keysToCheck) {
     const named = state.setup[key].players.filter(p => p.name.trim());
     const teamName = state.setup[key].name.trim();
     if (named.length === 0) {
@@ -1105,15 +1187,18 @@ function validateAndStartGame() {
 }
 
 function buildGameState() {
-  ['team1', 'team2'].forEach((key, i) => {
+  state.trackingMode = (state.setup && state.setup.mode) || 'single';
+  const isSingle = state.trackingMode === 'single';
+  ['team1', 'team2'].forEach((key) => {
     const s = state.setup[key];
-    const players = s.players
-      .filter(p => p.name.trim())
-      .map((p, idx) => ({
-        id: `${key}_${idx}`,
-        name: p.name.trim(),
-        number: p.number.trim(),
-      }));
+    // In single mode, team2 has no roster (opponent is tracked by name+score only)
+    const players = (isSingle && key === 'team2')
+      ? []
+      : s.players.filter(p => p.name.trim()).map((p, idx) => ({
+          id: `${key}_${idx}`,
+          name: p.name.trim(),
+          number: p.number.trim(),
+        }));
     state.teams[key] = {
       name: s.name.trim(),
       colorId: s.colorId,
@@ -1196,9 +1281,30 @@ function avatarGradient(id) {
 function render() {
   if (!state.teams.team1 || !state.teams.team2) return;
 
-  // Flex ratio: focused team gets 2 units, other gets 1; equal when no possession yet
-  document.getElementById('team-row-1').style.flex = focusTeam === 'team1' ? '2' : (focusTeam === 'team2' ? '1' : '1');
-  document.getElementById('team-row-2').style.flex = focusTeam === 'team2' ? '2' : (focusTeam === 'team1' ? '1' : '1');
+  const isSingle = state.trackingMode === 'single';
+  const row1 = document.getElementById('team-row-1');
+  const row2 = document.getElementById('team-row-2');
+
+  if (isSingle) {
+    // Single mode: team-row-2 is a fixed-height strip; team-row-1 fills remaining space
+    row1.style.flex = '1';
+    row2.classList.add('single-strip');
+    row2.classList.toggle('opp-has-disc', state.activeTeam === 'team2');
+    row2.style.flex = ''; // CSS handles height via single-strip class
+    // Update opponent strip labels
+    const td2 = state.teams.team2;
+    const nameEl  = document.getElementById('opp-name-label');
+    const scoreEl = document.getElementById('opp-score-label');
+    const barEl   = document.getElementById('opp-color-bar');
+    if (nameEl)  nameEl.textContent  = td2.name || 'Opponent';
+    if (scoreEl) scoreEl.textContent = state.score.team2 ?? 0;
+    if (barEl)   barEl.style.background = getColor(td2.colorId).swatch;
+  } else {
+    // Dual mode: flex-ratio shifts based on focused team
+    row2.classList.remove('single-strip', 'opp-has-disc');
+    row1.style.flex = focusTeam === 'team1' ? '2' : '1';
+    row2.style.flex = focusTeam === 'team2' ? '2' : '1';
+  }
 
   // Scoreboard — color + active/inactive per team
   ['team1', 'team2'].forEach((key, i) => {
@@ -1237,6 +1343,15 @@ function render() {
 
 function renderTeamBench(teamKey) {
   const n = teamKey === 'team1' ? '1' : '2';
+  // In single mode, hide team2's bench panel entirely (opponent strip takes its place)
+  if (state.trackingMode === 'single' && teamKey === 'team2') {
+    const panel = document.getElementById('bench-panel-2');
+    if (panel) panel.style.display = 'none';
+    return;
+  }
+  // Ensure bench panel is visible in dual mode (in case we switched back from single)
+  const panelEl = document.getElementById(`bench-panel-${n}`);
+  if (panelEl) panelEl.style.display = '';
   const td = state.teams[teamKey];
   const cfg = getCfg(teamKey);
   const subTextColor = cfg.darkText ? '#333' : 'rgba(255,255,255,0.88)';
@@ -1309,10 +1424,22 @@ function renderTeamBench(teamKey) {
 
 function renderTeamField(teamKey) {
   const n = teamKey === 'team1' ? '1' : '2';
+  // In single mode, hide team2's field entirely
+  if (state.trackingMode === 'single' && teamKey === 'team2') {
+    const wrap = document.getElementById(`field-${n}`);
+    if (wrap) wrap.style.display = 'none';
+    return;
+  }
+  // Ensure field is visible in dual mode
+  const fieldWrap = document.getElementById(`field-${n}`);
+  if (fieldWrap) fieldWrap.style.display = '';
   const td = state.teams[teamKey];
   const cfg = getCfg(teamKey);
-  // Active = has possession, OR possession not yet assigned (either team can receive first click)
-  const isActive = state.activeTeam === null || state.activeTeam === teamKey;
+  // In single mode, team1 cards are always tappable (to log touches and reclaim possession)
+  // In dual mode, active = has possession OR unassigned (either team can claim first touch)
+  const isActive = state.trackingMode === 'single'
+    ? (teamKey === 'team1')
+    : (state.activeTeam === null || state.activeTeam === teamKey);
 
   document.querySelectorAll(`#field-${n} .field-slot`).forEach((slot, i) => {
     const pid = td.field[i];
@@ -1395,6 +1522,20 @@ function onBenchClick(pid, teamKey) {
 }
 
 function onFieldClick(idx, teamKey) {
+  const isSingle = state.trackingMode === 'single';
+  let historyPushed = false;
+
+  // Single mode: tapping any team1 card while opponent has possession → reclaim
+  if (isSingle && teamKey === 'team1' && state.activeTeam === 'team2') {
+    pushHistory();
+    historyPushed = true;
+    state.activeTeam = 'team1';
+    focusTeam = 'team1';
+    state.teams.team2.discHolder = null;
+    state.teams.team2.turnoverUnknown = false;
+    // Fall through to record the touch for this team1 player
+  }
+
   // If possession not yet assigned, first click claims it for this team
   if (state.activeTeam === null) {
     state.activeTeam = teamKey;
@@ -1407,7 +1548,7 @@ function onFieldClick(idx, teamKey) {
   if (!pid) return;
   // Re-clicking the current disc holder is a no-op — green stays, no extra touch
   if (!td.turnoverUnknown && td.discHolder === pid) return;
-  pushHistory();
+  if (!historyPushed) pushHistory();
   if (td.turnoverUnknown) {
     // D pickup — credit the defender, no assister
     td.prevDiscHolder = null;
@@ -1797,7 +1938,8 @@ function showStats() {
   const content = document.getElementById('stats-content');
   content.innerHTML = '';
 
-  ['team1', 'team2'].forEach(key => {
+  const teamsToShow = state.trackingMode === 'single' ? ['team1'] : ['team1', 'team2'];
+  teamsToShow.forEach(key => {
     const team = state.teams[key];
     if (!team) return;
     const color = getColor(team.colorId);
@@ -1860,7 +2002,8 @@ function showStats() {
 
 function exportCSV() {
   const rows = [['Team','Name','Number','Touches','1pt Goals','2pt Goals','Total Pts','Assists','Turnovers','Ds','+/-','Play Time']];
-  ['team1', 'team2'].forEach(key => {
+  const teamsToExport = state.trackingMode === 'single' ? ['team1'] : ['team1', 'team2'];
+  teamsToExport.forEach(key => {
     const team = state.teams[key];
     if (!team) return;
     team.players.forEach(p => {
