@@ -907,6 +907,9 @@ let timerInterval = null;
 let editBuffer = [];
 let editTeamKey = 'team1'; // tracks which team is currently being edited
 
+// UI-only: which team row is visually expanded; follows possession by default
+let focusTeam = 'team1';
+
 // ============================================================
 // SCREEN MANAGEMENT
 // ============================================================
@@ -943,6 +946,7 @@ function resumeGame() {
     if (!state.eventLog) state.eventLog = [];   // backfill for saves predating event log
     timerSeconds = parsed.timerSeconds ?? 0;
     timerRunning = false;
+    focusTeam = state.activeTeam; // sync view focus to restored possession
     updateTimerDisplay();
     showScreen('game-screen');
     render();
@@ -1188,10 +1192,10 @@ function avatarGradient(id) {
 function render() {
   if (!state.teams.team1 || !state.teams.team2) return;
 
-  // Flex ratio: possessing team gets 2 units, defending team gets 1 unit
-  const activeIsTeam1 = state.activeTeam === 'team1';
-  document.getElementById('team-row-1').style.flex = activeIsTeam1 ? '2' : '1';
-  document.getElementById('team-row-2').style.flex = activeIsTeam1 ? '1' : '2';
+  // Flex ratio: focused team gets 2 units, other team gets 1 unit (view-only, not possession)
+  const focusIsTeam1 = focusTeam === 'team1';
+  document.getElementById('team-row-1').style.flex = focusIsTeam1 ? '2' : '1';
+  document.getElementById('team-row-2').style.flex = focusIsTeam1 ? '1' : '2';
 
   // Scoreboard — color + active/inactive per team
   ['team1', 'team2'].forEach((key, i) => {
@@ -1439,6 +1443,7 @@ function onTurnover(type) {
   td.turnoverUnknown = false;
   // Hand possession to the other team
   state.activeTeam = state.activeTeam === 'team1' ? 'team2' : 'team1';
+  focusTeam = state.activeTeam; // view follows possession on turnovers
   const newTd = getTeamData();
   if (type === 'd') newTd.turnoverUnknown = true; // D only: defensive pickup is ambiguous
   saveState(); render();
@@ -1481,6 +1486,7 @@ function onUndo() {
   if (!state.history.length) return;
   const prev = state.history.pop();
   state.activeTeam = prev.activeTeam;
+  focusTeam = state.activeTeam; // sync view to restored possession
   state.score = prev.score;
   state.teams = prev.teams;
   if (prev.eventLog !== undefined) state.eventLog = prev.eventLog;
@@ -1491,6 +1497,7 @@ function onUndo() {
 function switchTeam() {
   pushHistory();
   state.activeTeam = state.activeTeam === 'team1' ? 'team2' : 'team1';
+  focusTeam = state.activeTeam; // view follows possession on real turnovers/goals
   saveState(); render();
 }
 
@@ -1869,10 +1876,10 @@ document.querySelectorAll('.edit-team-btn').forEach(btn => {
   btn.addEventListener('click', () => openEditModal(btn.dataset.team));
 });
 document.getElementById('score-section-1').addEventListener('click', () => {
-  if (state.activeTeam !== 'team1') switchTeam();
+  if (focusTeam !== 'team1') { focusTeam = 'team1'; render(); }
 });
 document.getElementById('score-section-2').addEventListener('click', () => {
-  if (state.activeTeam !== 'team2') switchTeam();
+  if (focusTeam !== 'team2') { focusTeam = 'team2'; render(); }
 });
 document.getElementById('goal-btn').addEventListener('click', () => onGoal(1));
 document.getElementById('goal-btn-2pt').addEventListener('click', () => onGoal(2));
