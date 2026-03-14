@@ -1373,7 +1373,7 @@ function renderTeamBench(teamKey) {
   // Bench panel background + label
   document.getElementById(`bench-panel-${n}`).style.background = cfg.bench;
   const lbl = document.getElementById(`bench-label-${n}`);
-  lbl.textContent = cfg.name;
+  lbl.textContent = state.trackingMode === 'single' ? 'Bench' : cfg.name;
   lbl.style.color = subTextColor;
 
   // Build bench cards
