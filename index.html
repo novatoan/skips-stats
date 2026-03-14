@@ -1636,8 +1636,9 @@ function onGoal(points = 1) {
   }
   // Log goal event
   const prefix    = points === 2 ? '2pt ' : '';
+  const scorer    = td.discHolder ? getPlayerName(td.discHolder) : (td.name || '?');
   const assistStr = td.prevDiscHolder ? ` (assist: ${getPlayerName(td.prevDiscHolder)})` : '';
-  state.eventLog.push({ text: `${prefix}Goal: ${getPlayerName(td.discHolder)}${assistStr}`, type: 'goal', t: timerSeconds });
+  state.eventLog.push({ text: `${prefix}Goal: ${scorer}${assistStr}`, type: 'goal', t: timerSeconds });
   // Scorer keeps the disc — green circle persists after goal
   const btn   = document.getElementById('goal-btn');
   const btn2  = document.getElementById('goal-btn-2pt');
