@@ -2028,10 +2028,10 @@ function exportCSV() {
   const pt = state.possessionTime || {};
   rows.push(['SUMMARY']);
   rows.push(['Game', state.gameName || '']);
-  rows.push(['Final Score', `${t1.name} ${state.score.team1}  –  ${t2.name} ${state.score.team2}`]);
+  rows.push(['Final Score', 'Team', 'Score', 'Possession']);
+  rows.push(['', t1.name, state.score.team1, fmtPT(pt.team1 || 0)]);
+  rows.push(['', t2.name, state.score.team2, fmtPT(pt.team2 || 0)]);
   rows.push(['Game Time', fmtPT(timerSeconds)]);
-  rows.push([`${t1.name} Possession`, fmtPT(pt.team1 || 0)]);
-  rows.push([`${t2.name} Possession`, fmtPT(pt.team2 || 0)]);
   rows.push([]);
   rows.push(['Team','Name','Number','Touches','1pt Goals','2pt Goals','Total Pts','Assists','Turnovers','Ds','+/-','Play Time']);
   const teamsToExport = state.trackingMode === 'single' ? ['team1'] : ['team1', 'team2'];
