@@ -1013,6 +1013,7 @@ function resumeGame() {
     state = parsed.state;
     if (!state.eventLog) state.eventLog = [];              // backfill for saves predating event log
     if (!state.trackingMode) state.trackingMode = 'dual';  // backfill: old saves had two full teams
+    if (!state.possessionTime) state.possessionTime = { team1: 0, team2: 0 }; // backfill
     timerSeconds = parsed.timerSeconds ?? 0;
     timerRunning = false;
     focusTeam = state.activeTeam || null; // sync view focus to restored possession (null = unassigned)
@@ -1230,6 +1231,7 @@ function buildGameState() {
   state.activeTeam = null; // no possession until a player is intentionally clicked
   state.history = [];
   state.eventLog = [];
+  state.possessionTime = { team1: 0, team2: 0 };
 }
 
 // ============================================================
@@ -1735,6 +1737,9 @@ function tickPlayTimes() {
       if (el) el.textContent = fmtPT(state.playTime[pid]);
     });
   });
+  if (state.activeTeam) {
+    state.possessionTime[state.activeTeam] = (state.possessionTime[state.activeTeam] || 0) + 1;
+  }
   saveState();
 }
 
@@ -2016,7 +2021,19 @@ function showStats() {
 }
 
 function exportCSV() {
-  const rows = [['Team','Name','Number','Touches','1pt Goals','2pt Goals','Total Pts','Assists','Turnovers','Ds','+/-','Play Time']];
+  const rows = [];
+  // Summary block
+  const t1 = state.teams.team1;
+  const t2 = state.teams.team2;
+  const pt = state.possessionTime || {};
+  rows.push(['SUMMARY']);
+  rows.push(['Game', state.gameName || '']);
+  rows.push(['Final Score', `${t1.name} ${state.score.team1}  –  ${t2.name} ${state.score.team2}`]);
+  rows.push(['Game Time', fmtPT(timerSeconds)]);
+  rows.push([`${t1.name} Possession`, fmtPT(pt.team1 || 0)]);
+  rows.push([`${t2.name} Possession`, fmtPT(pt.team2 || 0)]);
+  rows.push([]);
+  rows.push(['Team','Name','Number','Touches','1pt Goals','2pt Goals','Total Pts','Assists','Turnovers','Ds','+/-','Play Time']);
   const teamsToExport = state.trackingMode === 'single' ? ['team1'] : ['team1', 'team2'];
   teamsToExport.forEach(key => {
     const team = state.teams[key];
