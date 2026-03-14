@@ -690,6 +690,19 @@
     #opp-color-bar { width: 8px; height: 40px; border-radius: 4px; flex-shrink: 0; }
     #opp-name-label { font-size: 1em; font-weight: 700; flex: 1; color: #fff; letter-spacing: 1px; }
     #opp-score-label { font-size: 1.6em; font-weight: 900; color: #fff; }
+    #opp-disc-badge {
+      display: none;
+      align-items: center; gap: 7px;
+      color: #4CAF50; font-size: 0.75em; font-weight: 700; letter-spacing: 1.5px;
+    }
+    #opp-disc-badge::before {
+      content: '';
+      width: 14px; height: 14px; flex-shrink: 0;
+      border: 3px solid #4CAF50; border-radius: 50%;
+      box-shadow: 0 0 8px rgba(76,175,80,0.7);
+    }
+    #team-row-2.opp-has-disc #opp-disc-badge { display: flex; }
+    #team-row-2.opp-has-disc { background: rgba(76,175,80,0.10); }
 
     /* ── PANEL-TEAM2 COLLAPSE (single mode setup) ────── */
     #panel-team2.single-collapsed .players-header,
@@ -849,6 +862,7 @@
     <div id="opponent-strip">
       <div id="opp-color-bar"></div>
       <div id="opp-name-label">Opponent</div>
+      <div id="opp-disc-badge">THEIR DISC</div>
       <div id="opp-score-label">0</div>
     </div>
     <div id="bench-panel-2" class="bench-panel">
