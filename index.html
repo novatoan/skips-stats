@@ -661,6 +661,45 @@
     }
     .stats-totals-row .pts-total { color: #fff; font-weight: 900; }
 
+    /* ── ROSTER ACTIONS ──────────────────────────────── */
+    .roster-actions-row {
+      display: flex; gap: 8px; margin-bottom: 12px;
+    }
+    .load-roster-btn, .save-roster-btn {
+      flex: 1; font-family: inherit; font-size: 0.7em; font-weight: 700;
+      letter-spacing: 1px; text-transform: uppercase;
+      padding: 7px 10px; border-radius: 6px; cursor: pointer;
+      border: 1.5px solid rgba(255,255,255,0.3); color: rgba(255,255,255,0.8);
+      background: rgba(255,255,255,0.08); transition: background 0.15s;
+    }
+    .load-roster-btn:active, .save-roster-btn:active { background: rgba(255,255,255,0.18); }
+
+    /* ── ROSTER MODAL ───────────────────────────────── */
+    #roster-modal-box { max-height: 70vh; display: flex; flex-direction: column; }
+    #roster-list { flex: 1; overflow-y: auto; min-height: 60px; }
+    .roster-row {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .roster-info { flex: 1; }
+    .roster-name { display: block; font-size: 1em; font-weight: 700; color: #fff; }
+    .roster-count { font-size: 0.75em; color: rgba(255,255,255,0.5); letter-spacing: 1px; }
+    .roster-load-btn {
+      font-family: inherit; font-size: 0.8em; font-weight: 700;
+      background: #1a6b1a; color: #fff; border: none; border-radius: 5px;
+      padding: 7px 14px; cursor: pointer; letter-spacing: 1px;
+    }
+    .roster-del-btn {
+      font-family: inherit; background: #2a1010; color: #e57373;
+      border: 1px solid #3e1818; border-radius: 4px;
+      width: 30px; height: 30px; cursor: pointer; font-size: 0.85em;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .roster-empty {
+      color: rgba(255,255,255,0.4); font-size: 0.85em;
+      text-align: center; padding: 24px 0; letter-spacing: 1px;
+    }
+
     /* ── TRACKING MODE TOGGLE ────────────────────────── */
     #tracking-mode-row {
       display: flex; align-items: center; justify-content: center;
@@ -707,7 +746,8 @@
     /* ── PANEL-TEAM2 COLLAPSE (single mode setup) ────── */
     #panel-team2.single-collapsed .players-header,
     #panel-team2.single-collapsed .player-list,
-    #panel-team2.single-collapsed .add-btn { display: none; }
+    #panel-team2.single-collapsed .add-btn,
+    #panel-team2.single-collapsed .roster-actions-row { display: none; }
   </style>
 </head>
 <body>
@@ -766,6 +806,10 @@
     <!-- Team 1 -->
     <div class="setup-panel" id="panel-team1">
       <input class="team-name-input" id="name-team1" type="text" maxlength="16" placeholder="TEAM NAME" autocomplete="off" spellcheck="false">
+      <div class="roster-actions-row">
+        <button class="load-roster-btn" onclick="showRosterModal('team1')">☰ LOAD ROSTER</button>
+        <button class="save-roster-btn" id="save-roster-team1" onclick="saveCurrentAsRoster('team1')">↑ SAVE ROSTER</button>
+      </div>
       <div class="swatches-label">TEAM COLOR</div>
       <div class="swatches-row" id="swatches-team1"></div>
       <div class="players-header">
@@ -779,6 +823,10 @@
     <!-- Team 2 -->
     <div class="setup-panel" id="panel-team2">
       <input class="team-name-input" id="name-team2" type="text" maxlength="16" placeholder="TEAM NAME" autocomplete="off" spellcheck="false">
+      <div class="roster-actions-row">
+        <button class="load-roster-btn" onclick="showRosterModal('team2')">☰ LOAD ROSTER</button>
+        <button class="save-roster-btn" id="save-roster-team2" onclick="saveCurrentAsRoster('team2')">↑ SAVE ROSTER</button>
+      </div>
       <div class="swatches-label">TEAM COLOR</div>
       <div class="swatches-row" id="swatches-team2"></div>
       <div class="players-header">
@@ -895,6 +943,17 @@
       <button class="btn-add"    id="add-player-btn">+ ADD PLAYER</button>
       <button class="btn-cancel" id="cancel-edit-btn">CANCEL</button>
       <button class="btn-save"   id="save-edit-btn">SAVE</button>
+    </div>
+  </div>
+</div>
+
+<!-- ROSTER MODAL -->
+<div class="overlay" id="roster-modal" style="display:none">
+  <div class="modal" id="roster-modal-box">
+    <h2>SAVED ROSTERS</h2>
+    <div id="roster-list"></div>
+    <div class="modal-footer">
+      <button class="btn-cancel" id="close-roster-btn">CLOSE</button>
     </div>
   </div>
 </div>
@@ -1158,6 +1217,115 @@ function applySetupModeLayout() {
   if (panel2) panel2.classList.toggle('single-collapsed', isSingle);
   const nameInput2 = document.getElementById('name-team2');
   if (nameInput2) nameInput2.placeholder = isSingle ? 'Opponent name' : 'Team name';
+}
+
+// ============================================================
+// ROSTER MANAGEMENT
+// ============================================================
+function loadRosters() {
+  try { return JSON.parse(localStorage.getItem('gt_rosters') || '[]'); }
+  catch { return []; }
+}
+
+function saveRosters(rosters) {
+  try { localStorage.setItem('gt_rosters', JSON.stringify(rosters)); }
+  catch {}
+}
+
+let rosterModalTarget = null;
+
+function showRosterModal(teamKey) {
+  rosterModalTarget = teamKey;
+  renderRosterList();
+  document.getElementById('roster-modal').style.display = 'flex';
+}
+
+function renderRosterList() {
+  const rosters = loadRosters();
+  const listEl = document.getElementById('roster-list');
+  listEl.innerHTML = '';
+  if (rosters.length === 0) {
+    const msg = document.createElement('p');
+    msg.className = 'roster-empty';
+    msg.textContent = 'NO SAVED ROSTERS YET';
+    listEl.appendChild(msg);
+    return;
+  }
+  rosters.forEach(r => {
+    const playerCount = r.players.filter(p => p.name.trim()).length;
+    const row = document.createElement('div');
+    row.className = 'roster-row';
+
+    const info = document.createElement('div');
+    info.className = 'roster-info';
+    info.innerHTML = `<span class="roster-name">${r.name}</span><span class="roster-count">${playerCount} PLAYER${playerCount !== 1 ? 'S' : ''}</span>`;
+
+    const loadBtn = document.createElement('button');
+    loadBtn.className = 'roster-load-btn';
+    loadBtn.textContent = 'LOAD';
+    loadBtn.addEventListener('click', () => {
+      applyRoster(rosterModalTarget, r);
+      document.getElementById('roster-modal').style.display = 'none';
+    });
+
+    const delBtn = document.createElement('button');
+    delBtn.className = 'roster-del-btn';
+    delBtn.textContent = '✕';
+    delBtn.addEventListener('click', () => {
+      deleteRoster(r.id);
+      renderRosterList();
+    });
+
+    row.appendChild(info);
+    row.appendChild(loadBtn);
+    row.appendChild(delBtn);
+    listEl.appendChild(row);
+  });
+}
+
+function applyRoster(teamKey, roster) {
+  state.setup[teamKey].name    = roster.name;
+  state.setup[teamKey].colorId = roster.colorId;
+  state.setup[teamKey].players = roster.players.map(p => ({ ...p }));
+  document.getElementById(`name-${teamKey}`).value = roster.name;
+  renderSwatches(teamKey);
+  renderSetupPlayers(teamKey);
+  updatePanelColor(teamKey);
+}
+
+function saveCurrentAsRoster(teamKey) {
+  const s = state.setup[teamKey];
+  const name = s.name.trim();
+  if (!name) {
+    alert('Enter a team name before saving a roster.');
+    document.getElementById(`name-${teamKey}`).focus();
+    return;
+  }
+  const players = s.players.filter(p => p.name.trim());
+  if (players.length === 0) {
+    alert('Add at least one player before saving a roster.');
+    return;
+  }
+  const rosters = loadRosters();
+  const existingIdx = rosters.findIndex(r => r.name.toLowerCase() === name.toLowerCase());
+  const entry = {
+    id: existingIdx >= 0 ? rosters[existingIdx].id : `r_${Date.now()}`,
+    name, colorId: s.colorId,
+    players,
+  };
+  if (existingIdx >= 0) rosters[existingIdx] = entry;
+  else rosters.push(entry);
+  saveRosters(rosters);
+  const btn = document.getElementById(`save-roster-${teamKey}`);
+  if (btn) {
+    const orig = btn.textContent;
+    btn.textContent = '✓ SAVED';
+    setTimeout(() => { btn.textContent = orig; }, 1500);
+  }
+}
+
+function deleteRoster(id) {
+  saveRosters(loadRosters().filter(r => r.id !== id));
 }
 
 function addSetupPlayer(key) {
@@ -2127,6 +2295,9 @@ document.addEventListener('touchstart', function(e) {
 
 // Modal
 document.getElementById('add-player-btn').addEventListener('click', addPlayerToModal);
+document.getElementById('close-roster-btn').addEventListener('click', () => {
+  document.getElementById('roster-modal').style.display = 'none';
+});
 document.getElementById('cancel-edit-btn').addEventListener('click', () => {
   document.getElementById('edit-modal').style.display = 'none';
 });
