@@ -593,6 +593,15 @@
       padding: 11px 22px; font-family: inherit; font-size: 0.88em;
       font-weight: 900; letter-spacing: 1px; cursor: pointer;
     }
+    #confirm-end-btns { flex-wrap: wrap; }
+    #confirm-end-new-setup {
+      background: transparent; color: rgba(255,255,255,0.45);
+      border: 1px solid rgba(255,255,255,0.2); border-radius: 7px;
+      padding: 9px 18px; font-family: inherit; font-size: 0.78em;
+      font-weight: 700; letter-spacing: 1px; cursor: pointer;
+      width: 100%; margin-top: 6px;
+    }
+    #confirm-end-new-setup:hover { color: rgba(255,255,255,0.7); border-color: rgba(255,255,255,0.4); }
 
     /* Stats modal */
     #stats-box {
@@ -965,6 +974,7 @@
     <div id="confirm-end-btns">
       <button id="confirm-end-yes">VIEW STATS</button>
       <button id="confirm-end-no">KEEP PLAYING</button>
+      <button id="confirm-end-new-setup">↩ NEW GAME SETUP</button>
     </div>
   </div>
 </div>
@@ -2127,6 +2137,32 @@ function endGame() {
   document.getElementById('confirm-end-modal').style.display = 'flex';
 }
 
+function returnToSetup() {
+  const confirmed = window.confirm('Abandon this game and return to setup? All stats will be lost.');
+  if (!confirmed) return;
+  document.getElementById('confirm-end-modal').style.display = 'none';
+  // Carry team1's name, color, and roster back into setup
+  const t1 = state.teams && state.teams.team1;
+  const prevMode = (state.setup && state.setup.mode) || 'single';
+  state.setup = {
+    gameName: '',
+    mode: prevMode,
+    team1: {
+      name:    t1 ? t1.name    : 'Dark',
+      colorId: t1 ? t1.colorId : 'black',
+      players: t1 && t1.players.length
+        ? t1.players.map(p => ({ number: p.number || '', name: p.name || '' }))
+        : [{ number: '', name: '' }],
+    },
+    team2: { name: 'Light', colorId: 'white', players: [{ number: '', name: '' }] },
+  };
+  localStorage.removeItem('gt_save');
+  timerSeconds = 0; timerRunning = false; clearInterval(timerInterval);
+  updateTimerDisplay();
+  initSetupScreen();
+  showScreen('setup-screen');
+}
+
 function showStats() {
   document.getElementById('confirm-end-modal').style.display = 'none';
   const content = document.getElementById('stats-content');
@@ -2268,6 +2304,7 @@ document.getElementById('confirm-end-yes').addEventListener('click', showStats);
 document.getElementById('confirm-end-no').addEventListener('click', () => {
   document.getElementById('confirm-end-modal').style.display = 'none';
 });
+document.getElementById('confirm-end-new-setup').addEventListener('click', returnToSetup);
 document.getElementById('stats-close-btn').addEventListener('click', () => {
   document.getElementById('stats-modal').style.display = 'none';
 });
