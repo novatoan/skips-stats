@@ -1749,7 +1749,7 @@ function onFieldClick(idx, teamKey) {
     td.turnoverUnknown = false;
     getPlayerStat(pid).ds++;
     getPlayerStat(pid).touches++;
-    state.eventLog.push({ text: `${getPlayerName(pid)} got a D`, type: 'pass', t: timerSeconds, team: state.activeTeam });
+    state.eventLog.push({ text: `${getPlayerName(pid)} got a D`, type: 'pass', exportType: 'to', t: timerSeconds, team: state.activeTeam });
   } else {
     // normal pass — previous holder becomes potential assister
     td.prevDiscHolder = td.discHolder;
@@ -1781,7 +1781,11 @@ function onTurnover(type) {
   const evtText = type === 'd'
     ? `${getPlayerName(td.discHolder)} got D'd`
     : `${typeMap[type] || type}: ${getPlayerName(td.discHolder)}`;
-  state.eventLog.push({ text: evtText, type: 'to', t: timerSeconds, team: state.activeTeam });
+  // In single mode, a D against the opponent produces a follow-up pickup event that
+  // covers this row more meaningfully — hide it from the CSV export.
+  const toEntry = { text: evtText, type: 'to', t: timerSeconds, team: state.activeTeam };
+  if (type === 'd' && state.trackingMode === 'single' && state.activeTeam === 'team2') toEntry.exportHide = true;
+  state.eventLog.push(toEntry);
   td.discHolder = null;
   td.prevDiscHolder = null;
   td.turnoverUnknown = false;
@@ -2261,8 +2265,9 @@ function exportCSV() {
   rows.push([]);
   rows.push(['Time', 'Type', 'Event', 'Team']);
   (state.eventLog || []).forEach(e => {
+    if (e.exportHide) return;
     const teamName = e.team && state.teams[e.team] ? state.teams[e.team].name : (e.team || '');
-    rows.push([fmtPT(e.t ?? 0), e.type, e.text, teamName]);
+    rows.push([fmtPT(e.t ?? 0), e.exportType || e.type, e.text, teamName]);
   });
 
   const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
