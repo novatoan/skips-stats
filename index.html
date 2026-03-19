@@ -1749,13 +1749,13 @@ function onFieldClick(idx, teamKey) {
     td.turnoverUnknown = false;
     getPlayerStat(pid).ds++;
     getPlayerStat(pid).touches++;
-    state.eventLog.push({ text: `${getPlayerName(pid)} got a D`, type: 'pass', t: timerSeconds });
+    state.eventLog.push({ text: `${getPlayerName(pid)} got a D`, type: 'pass', t: timerSeconds, team: state.activeTeam });
   } else {
     // normal pass — previous holder becomes potential assister
     td.prevDiscHolder = td.discHolder;
     td.discHolder = pid;
     getPlayerStat(pid).touches++;
-    state.eventLog.push({ text: `${getPlayerName(pid)} has the disc`, type: 'pass', t: timerSeconds });
+    state.eventLog.push({ text: `${getPlayerName(pid)} has the disc`, type: 'pass', t: timerSeconds, team: state.activeTeam });
   }
   // Nudge the clock reminder if the timer isn't running
   if (!timerRunning) {
@@ -1781,7 +1781,7 @@ function onTurnover(type) {
   const evtText = type === 'd'
     ? `${getPlayerName(td.discHolder)} got D'd`
     : `${typeMap[type] || type}: ${getPlayerName(td.discHolder)}`;
-  state.eventLog.push({ text: evtText, type: 'to', t: timerSeconds });
+  state.eventLog.push({ text: evtText, type: 'to', t: timerSeconds, team: state.activeTeam });
   td.discHolder = null;
   td.prevDiscHolder = null;
   td.turnoverUnknown = false;
@@ -1817,7 +1817,7 @@ function onGoal(points = 1) {
   const prefix    = points === 2 ? '2pt ' : '';
   const scorer    = td.discHolder ? getPlayerName(td.discHolder) : (td.name || '?');
   const assistStr = td.prevDiscHolder ? ` (assist: ${getPlayerName(td.prevDiscHolder)})` : '';
-  state.eventLog.push({ text: `${prefix}Goal: ${scorer}${assistStr}`, type: 'goal', t: timerSeconds });
+  state.eventLog.push({ text: `${prefix}Goal: ${scorer}${assistStr}`, type: 'goal', t: timerSeconds, team: state.activeTeam });
   // Scorer keeps the disc — green circle persists after goal
   const btn   = document.getElementById('goal-btn');
   const btn2  = document.getElementById('goal-btn-2pt');
@@ -2259,9 +2259,10 @@ function exportCSV() {
   });
   // Event log block
   rows.push([]);
-  rows.push(['Time', 'Type', 'Event']);
+  rows.push(['Time', 'Type', 'Event', 'Team']);
   (state.eventLog || []).forEach(e => {
-    rows.push([fmtPT(e.t ?? 0), e.type, e.text]);
+    const teamName = e.team && state.teams[e.team] ? state.teams[e.team].name : (e.team || '');
+    rows.push([fmtPT(e.t ?? 0), e.type, e.text, teamName]);
   });
 
   const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
