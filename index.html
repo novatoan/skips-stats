@@ -111,7 +111,7 @@
       border-bottom: 2px solid rgba(255,255,255,0.25);
       color: rgba(255,255,255,0.75); font-family: inherit;
       font-size: clamp(0.7em, 1.7vw, 0.95em); font-weight: 700;
-      letter-spacing: 2px; text-transform: uppercase;
+      letter-spacing: 2px;
       width: 100%; max-width: 340px; padding: 4px 0;
       text-align: center; outline: none; transition: border-color 0.15s;
     }
@@ -1102,7 +1102,7 @@ function defaultGameName() {
   const m = now.getMonth() + 1;
   const d = now.getDate();
   const h = now.getHours();
-  const period = h < 12 ? 'morning' : h < 17 ? 'afternoon' : h < 21 ? 'evening' : 'night';
+  const period = h < 12 ? 'Morning' : h < 17 ? 'Afternoon' : h < 21 ? 'Evening' : 'Night';
   return `${m}/${d} ${period}`;
 }
 
