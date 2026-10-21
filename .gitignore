@@ -1,9 +1,38 @@
 # Reference docs — not part of the web app
-*.jpg
 *.pdf
 
-# Claude IDE config
+# Photos / screenshots (may show real players) — app icons are the only images tracked
+*.jpg
+*.jpeg
+*.heic
+*.gif
+*.webp
+*.png
+!icon-192.png
+!icon-512.png
+
+# Exported game stats (contain real player names)
+*.csv
+
+# Secrets
+.env
+.env.*
+*.pem
+*.key
+secrets.*
+
+# Dependencies and build output
+node_modules/
+dist/
+build/
+out/
+
+# Netlify local state
+.netlify/
+
+# Claude config
 .claude/
+CLAUDE.md
 
 # macOS
 .DS_Store
