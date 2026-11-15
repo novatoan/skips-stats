@@ -2271,10 +2271,38 @@ function exportCSV() {
   });
 
   const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
-  const a = document.createElement('a');
-  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
-  a.download = 'goaltimate-stats.csv';
-  a.click();
+  const slug = (state.gameName || '').trim().replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '');
+  const filename = (slug ? `goaltimate-${slug}` : 'goaltimate-stats') + '.csv';
+
+  // iOS home-screen apps ignore <a download>, so prefer the share sheet (Save to Files, AirDrop, Mail…)
+  const file = new File([csv], filename, { type: 'text/csv' });
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    navigator.share({ files: [file], title: filename }).catch(err => {
+      if (err.name !== 'AbortError') copyCSVFallback(csv);
+    });
+    return;
+  }
+  try {
+    const url = URL.createObjectURL(file);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
+  } catch (e) {
+    copyCSVFallback(csv);
+  }
+}
+
+function copyCSVFallback(csv) {
+  const done = () => alert('Could not save the file, so the CSV was copied instead. Paste it into Notes or an email to keep it.');
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(csv).then(done, () => prompt('Copy this CSV:', csv));
+  } else {
+    prompt('Copy this CSV:', csv);
+  }
 }
 
 // ============================================================
