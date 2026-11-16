@@ -910,7 +910,7 @@
   <div class="modal">
     <h2 id="edit-modal-title">EDIT TEAM</h2>
     <label class="modal-field-label" for="edit-team-name">TEAM NAME</label>
-    <input class="modal-team-name-input" id="edit-team-name" type="text" maxlength="16"
+    <input class="modal-team-name-input" id="edit-team-name" type="text" maxlength="16" enterkeyhint="next"
       autocomplete="off" spellcheck="false" placeholder="Team name">
     <div class="modal-field-label">PLAYERS</div>
     <div class="modal-player-list" id="edit-player-list"></div>
@@ -2165,6 +2165,17 @@ function renderEditList() {
     nameInp.value = p.name; nameInp.placeholder = 'Player name';
     nameInp.inputMode = 'text';
     nameInp.addEventListener('input', e => { editBuffer[i].name = e.target.value; });
+    // Return on a name → next row (adding a new one at the end), like the setup screen
+    nameInp.addEventListener('keydown', e => {
+      if (e.key !== 'Enter') return;
+      e.preventDefault();
+      if (i < editBuffer.length - 1) { focusEditRow(i + 1); return; }
+      if (nameInp.value.trim()) addPlayerToModal(); // don't stack up blank rows
+    });
+    // Return on a number → its name field
+    numInp.addEventListener('keydown', e => {
+      if (e.key === 'Enter') { e.preventDefault(); nameInp.focus(); }
+    });
 
     const del = document.createElement('button');
     del.className = 'del-btn'; del.textContent = '✕';
@@ -2175,13 +2186,19 @@ function renderEditList() {
   });
 }
 
+function focusEditRow(i) {
+  const input = document.querySelectorAll('#edit-player-list .modal-name-input')[i];
+  if (!input) return;
+  input.focus();
+  input.scrollIntoView({ block: 'nearest' });
+}
+
 function addPlayerToModal() {
-  editBuffer.push({ id: `${state.activeTeam}_${Date.now()}`, name: '', number: '' });
+  editBuffer.push({ id: `${editTeamKey}_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`, name: '', number: '' });
   renderEditList();
-  // Call focus synchronously within the click handler (user gesture) so iOS shows keyboard.
+  // Focus synchronously within the tap/keypress (user gesture) so iOS keeps the keyboard up.
   // renderEditList() is synchronous — the new input is in the DOM by this line.
-  const inputs = document.querySelectorAll('#edit-player-list .modal-name-input');
-  if (inputs.length) inputs[inputs.length - 1].focus();
+  focusEditRow(editBuffer.length - 1);
 }
 
 function saveEditModal() {
@@ -2629,6 +2646,11 @@ document.addEventListener('touchstart', function(e) {
 
 // Modal
 document.getElementById('add-player-btn').addEventListener('click', addPlayerToModal);
+document.getElementById('edit-team-name').addEventListener('keydown', e => {
+  if (e.key !== 'Enter') return;
+  e.preventDefault();
+  if (editBuffer.length) focusEditRow(0); else addPlayerToModal();
+});
 document.getElementById('close-roster-btn').addEventListener('click', () => {
   document.getElementById('roster-modal').style.display = 'none';
 });
