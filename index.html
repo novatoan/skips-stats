@@ -1830,13 +1830,14 @@ function onTileTap(pid, teamKey) {
     td.turnoverUnknown = false;
     getPlayerStat(pid).ds++;
     getPlayerStat(pid).touches++;
-    state.eventLog.push({ text: `${getPlayerName(pid)} got a D`, type: 'pass', exportType: 'to', t: timerSeconds, at: Date.now(), team: state.activeTeam });
+    state.eventLog.push({ text: `${getPlayerName(pid)} got a D`, type: 'pass', exportType: 'to', pid, t: timerSeconds, at: Date.now(), team: state.activeTeam });
   } else {
     // normal pass — previous holder becomes potential assister
     td.prevDiscHolder = td.discHolder;
     td.discHolder = pid;
     getPlayerStat(pid).touches++;
-    state.eventLog.push({ text: `${getPlayerName(pid)} has the disc`, type: 'pass', t: timerSeconds, at: Date.now(), team: state.activeTeam });
+    // from/pid let post-game analysis count who threw to whom (a completed throw)
+    state.eventLog.push({ text: `${getPlayerName(pid)} has the disc`, type: 'pass', pid, ...(td.prevDiscHolder ? { from: td.prevDiscHolder } : {}), t: timerSeconds, at: Date.now(), team: state.activeTeam });
   }
   // Nudge the clock reminder if the timer isn't running
   if (!timerRunning) {
@@ -2593,6 +2594,7 @@ function buildCSV(rec) {
       ]);
     });
   });
+  passingRows(g, teamsToExport).forEach(r => rows.push(r));
   // Event log block
   rows.push([]);
   rows.push(['Game Clock', 'Time of Day', 'Type', 'Event', 'Team']);
@@ -2602,6 +2604,58 @@ function buildCSV(rec) {
     rows.push([fmtPT(e.t ?? 0), fmtClock(e.at), e.exportType || e.type, e.text, teamName]);
   });
   return rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+}
+
+// Who threw to whom: a completed throw is a pass event with both a thrower (from) and a
+// receiver (pid). Turnovers end the chain; goals don't (the scorer keeps the disc).
+// Built from the event log, so undo already removes anything undone.
+function passingRows(g, teamKeys) {
+  const rows = [];
+  const counts = {}; // from -> to -> n
+  let any = false;
+  (g.eventLog || []).forEach(e => {
+    if (e.type !== 'pass' || !e.from || !e.pid) return;
+    any = true;
+    (counts[e.from] = counts[e.from] || {})[e.pid] = (counts[e.from][e.pid] || 0) + 1;
+  });
+  const n = (a, b) => (counts[a] && counts[a][b]) || 0;
+  teamKeys.forEach(key => {
+    const team = g.teams[key];
+    if (!team) return;
+    const players = [...team.players];
+    // Anyone removed in Edit Team keeps their throws in the record
+    const known = new Set(players.map(p => p.id));
+    (g.eventLog || []).forEach(e => {
+      if (e.type === 'pass' && e.team === key) [e.from, e.pid].forEach(id => {
+        if (id && !known.has(id)) { known.add(id); players.push({ id, name: 'Removed player', number: '' }); }
+      });
+    });
+    const label = p => p.name + (p.number && String(p.number).trim() ? ` #${String(p.number).trim()}` : '');
+    rows.push([]);
+    rows.push([`PASSING GRID — ${team.name || key}`, 'Rows = thrower, columns = receiver, cells = completed throws']);
+    if (!any) { rows.push(['No passing data recorded for this game.']); return; }
+    rows.push(['Thrower ↓  Receiver →', ...players.map(label), 'Total Thrown']);
+    players.forEach(a => {
+      const line = players.map(b => (a.id === b.id ? '' : n(a.id, b.id)));
+      rows.push([label(a), ...line, line.reduce((s, v) => s + (v || 0), 0)]);
+    });
+    const recv = players.map(b => players.reduce((s, a) => s + n(a.id, b.id), 0));
+    rows.push(['Total Received', ...recv, recv.reduce((s, v) => s + v, 0)]);
+
+    rows.push([]);
+    rows.push([`PASSING BY PLAYER — ${team.name || key}`]);
+    rows.push(['Player', 'Touches', 'Direction', 'Teammate', 'Throws']);
+    players.forEach(a => {
+      const st = g.stats[a.id] || {};
+      const mates = players.filter(b => b.id !== a.id);
+      const byCount = f => [...mates].sort((x, y) => f(y) - f(x));
+      byCount(b => n(a.id, b.id)).forEach((b, i) =>
+        rows.push([i === 0 ? label(a) : '', i === 0 ? (st.touches || 0) : '', 'Threw to', label(b), n(a.id, b.id)]));
+      byCount(b => n(b.id, a.id)).forEach(b =>
+        rows.push(['', '', 'Received from', label(b), n(b.id, a.id)]));
+    });
+  });
+  return rows;
 }
 
 // Hand a file to the user. Resolves to 'shared' | 'downloaded' | 'copied' | 'cancelled' | 'failed'.
