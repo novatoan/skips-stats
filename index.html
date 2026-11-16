@@ -224,73 +224,38 @@
     }
 
     /* ── GAME SCREEN ────────────────────────────────── */
-    #game-screen { flex-direction: column; }
-    #game-body { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow: hidden; }
+    /* Scoreboard and body share one column layout so each score sits over its team */
+    #game-screen { flex-direction: column; --action-w: clamp(190px, 21vw, 260px); }
+    #game-body {
+      flex: 1; min-height: 0; overflow: hidden;
+      display: grid; grid-template-columns: 1fr 1fr var(--action-w);
+    }
+    #game-body.single #team-panel-1 { grid-column: 1 / span 2; }
 
-    /* Team rows (stacked vertically, flex-ratio shifts on possession) */
-    .team-row {
-      display: flex; flex-direction: row; min-height: 0; overflow: hidden;
-      transition: flex 0.3s ease-in-out;
+    .team-panel {
+      display: flex; flex-direction: column; min-width: 0; min-height: 0;
+      padding: 8px; gap: 8px; position: relative; transition: background 0.2s;
     }
-    /* Bench panel (left column of each team row) */
-    .bench-panel {
-      width: 35%; min-width: 100px; display: flex; flex-direction: column;
-      transition: background 0.3s; overflow: hidden;
+    #team-panel-1 { border-right: 1px solid rgba(0,0,0,0.35); }
+    .team-panel-head {
+      display: flex; align-items: center; gap: 10px; flex-shrink: 0;
+      color: rgba(255,255,255,0.88);
     }
-    .bench-team-label {
-      color: rgba(255,255,255,0.88); text-align: center; padding: 3px 6px;
-      font-size: clamp(0.55em, 1.4vw, 0.8em); font-weight: 700;
-      letter-spacing: 2px; flex-shrink: 0;
-      background: rgba(0,0,0,0.22);
+    .team-panel.dark-text .team-panel-head { color: rgba(0,0,0,0.75); }
+    .team-panel-name {
+      font-size: clamp(0.7em, 1.5vw, 0.95em); font-weight: 900; letter-spacing: 2px;
+      text-transform: uppercase; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     }
-    .bench-grid {
-      flex: 1; display: grid; grid-template-columns: 1fr 1fr;
-      gap: 10px; padding: 7px; overflow: hidden; min-height: 0;
-    }
-    .bench-card {
-      border-radius: 7px; overflow: hidden; cursor: pointer; position: relative;
-      border: 2px solid rgba(255,255,255,0.18); background: #0a0a0a;
-      user-select: none; -webkit-user-select: none;
-      touch-action: none;
-      transition: transform 0.08s, box-shadow 0.08s;
-    }
-    .bench-card:active { transform: scale(0.92); box-shadow: 0 0 14px rgba(255,255,255,0.2); }
-    .bench-card .avatar {
-      width: 100%; height: 100%; position: relative;
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      font-size: clamp(0.75em, 2.2vw, 1.3em); font-weight: 900; color: #fff;
-      text-align: center; padding: 6px; word-break: break-word; line-height: 1.2;
-    }
-    .bench-compact .pt-badge,
-    .bench-compact .stat-badge { display: none; }
-    .bench-card .card-name {
-      display: block; text-align: center; width: 100%;
-    }
-    .bench-card .num-badge {
-      position: static; transform: none; font-size: 1em; opacity: 0.85;
-    }
-    .pt-badge {
-      position: absolute; bottom: 4px; right: 5px;
-      font-size: clamp(0.6em, 1.6vw, 0.95em); font-weight: 900;
-      opacity: 0.75; letter-spacing: 0.3px; pointer-events: none; z-index: 6;
-    }
-    .stat-badge {
-      position: absolute; bottom: 4px; left: 5px;
-      font-size: clamp(0.6em, 1.6vw, 0.95em); font-weight: 900;
-      opacity: 0.75; letter-spacing: 0.3px; pointer-events: none; z-index: 6;
-    }
-    .num-badge {
-      position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%);
-      font-size: clamp(0.65em, 1.8vw, 1.05em); font-weight: 900;
-      opacity: 0.85; letter-spacing: 0.3px; pointer-events: none; z-index: 6;
+    .team-panel-count {
+      font-size: clamp(0.55em, 1.1vw, 0.7em); font-weight: 900; letter-spacing: 1px; opacity: 0.7;
       white-space: nowrap;
     }
-    .bench-footer {
-      display: flex; gap: 6px; padding: 5px 7px; flex-shrink: 0;
-    }
+    .team-panel-count.short { color: #FFB300; opacity: 1; }
+    .team-panel-head .edit-team-btn { margin-left: auto; flex: 0 0 auto; padding: 6px 10px; }
+    .team-panel.dark-text .edit-team-btn { background: rgba(0,0,0,0.08); color: #111; border-color: rgba(0,0,0,0.45); }
     .edit-team-btn {
-      flex: 1; padding: 7px 4px; font-family: inherit;
-      font-size: clamp(0.48em, 1.1vw, 0.68em); font-weight: 900;
+      font-family: inherit;
+      font-size: clamp(0.5em, 1.1vw, 0.68em); font-weight: 900;
       letter-spacing: 1px; text-transform: uppercase;
       background: #1a1a1a; border: 2px solid rgba(255,255,255,0.65);
       border-radius: 5px; cursor: pointer; color: #fff;
@@ -298,16 +263,127 @@
     }
     .edit-team-btn:active { opacity: 0.7; }
 
-    /* Field panel (right column of each team row — 2×2 grid) */
-    .field-panel {
-      flex: 1; display: grid;
-      grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr;
-      gap: 7px; padding: 7px; min-height: 0;
-      position: relative; overflow: hidden;
+    .tile-grid { flex: 1; min-height: 0; display: grid; gap: 8px; }
+    .tile {
+      container-type: size; position: relative; overflow: hidden;
+      border-radius: 9px; border: 3px solid rgba(255,255,255,0.22);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      text-align: center; padding: 6px 8px; line-height: 1.15;
+      cursor: pointer; user-select: none; -webkit-user-select: none;
+      transition: opacity 0.15s, transform 0.08s, border-color 0.15s;
     }
+    .team-panel.dark-text .tile { border-color: rgba(0,0,0,0.2); }
+    .tile:active { transform: scale(0.96); }
+    .team-panel.inactive .tile { cursor: default; }
+    .team-panel.inactive .tile:active { transform: none; }
+    .tile.off { opacity: 0.38; border-style: dashed; }
+    .tile-name {
+      font-size: clamp(11px, 17cqmin, 30px); font-weight: 900; word-break: break-word;
+      max-width: 100%;
+    }
+    .tile-num { font-size: clamp(9px, 12cqmin, 20px); font-weight: 900; opacity: 0.8; margin-top: 2px; }
+    .tile-stats {
+      position: absolute; bottom: 4px; left: 7px;
+      font-size: clamp(9px, 11cqmin, 17px); font-weight: 900; opacity: 0.8;
+    }
+    .tile-toggle {
+      position: absolute; top: 0; right: 0;
+      width: clamp(30px, 30cqmin, 44px); height: clamp(30px, 30cqmin, 44px);
+      background: transparent; border: none; color: inherit; cursor: pointer;
+      font-size: clamp(14px, 16cqmin, 22px); line-height: 1; padding: 0;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .tile.has-disc { border-color: #4CAF50; box-shadow: inset 0 0 0 3px #4CAF50, 0 0 16px rgba(76,175,80,0.7); }
+    .tile.has-disc::after {
+      content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      height: 82%; aspect-ratio: 1; border: 4px solid #4CAF50; border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .d-prompt {
+      display: none; flex-shrink: 0; text-align: center;
+      background: rgba(200, 30, 30, 0.92); color: #fff;
+      font-size: clamp(0.65em, 1.6vw, 0.95em); font-weight: 900;
+      letter-spacing: 2px; padding: 8px 12px; border-radius: 8px;
+      animation: d-pulse 0.9s ease-in-out infinite;
+    }
+    @keyframes d-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+
+    /* Action column (right) */
+    #action-col {
+      display: flex; flex-direction: column; gap: 8px; padding: 8px;
+      background: #111; min-height: 0; border-left: 1px solid #222;
+    }
+    #action-col > button, #turn-btn {
+      font-family: inherit; font-weight: 900; color: #fff; border: none;
+      border-radius: 8px; cursor: pointer; transition: background 0.1s, opacity 0.1s;
+    }
+    #goal-btn {
+      flex: 0 0 22%; background: #43A047;
+      font-size: clamp(1.3em, 3.2vw, 2.2em); letter-spacing: 5px;
+    }
+    #goal-btn:active { background: #2E7D32; }
+    #goal-btn-2pt {
+      flex: 0 0 12%; background: #1a6b1a;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    #goal-btn-2pt:active { background: #135213; }
+    .twopt-num  { font-size: clamp(1.2em, 2.6vw, 1.8em); line-height: 1; }
+    .twopt-label { font-size: clamp(0.55em, 1.1vw, 0.75em); letter-spacing: 2px; opacity: 0.85; }
+    @keyframes goalFlash    { 0% { background: #43A047; } 40% { background: #A5D6A7; } 100% { background: #43A047; } }
+    @keyframes goalFlash2pt { 0% { background: #1a6b1a; } 40% { background: #43A047; } 100% { background: #1a6b1a; } }
+    #goal-btn.flash { animation: goalFlash 0.45s ease-in-out 2; }
+    #goal-btn-2pt.flash { animation: goalFlash2pt 0.45s ease-in-out 2; }
+    #turn-area { position: relative; flex: 0 0 14%; display: flex; }
+    #turn-btn {
+      flex: 1; background: #C62828;
+      font-size: clamp(0.95em, 2.2vw, 1.4em); letter-spacing: 3px;
+    }
+    #turn-btn:active { opacity: 0.65; }
+    /* Turn menu flies out to the left of the column */
+    #turn-menu {
+      position: absolute; top: 0; right: calc(100% + 8px); width: 170px;
+      display: flex; flex-direction: column;
+      background: #1a1a1a; border-radius: 8px; overflow: hidden; z-index: 30;
+      box-shadow: -6px 6px 24px rgba(0,0,0,0.7);
+      visibility: hidden; pointer-events: none;
+    }
+    #turn-menu.open { visibility: visible; pointer-events: auto; }
+    .to-btn {
+      display: block; width: 100%; margin: 0; padding: 15px 16px; font-family: inherit;
+      font-size: clamp(0.7em, 1.5vw, 0.95em); font-weight: 900; letter-spacing: 1px; color: #fff;
+      border: none; border-bottom: 1px solid rgba(255,255,255,0.08);
+      cursor: pointer; transition: opacity 0.1s; text-align: left;
+    }
+    .to-btn:last-child { border-bottom: none; }
+    .to-btn:active { opacity: 0.65; }
+    .to-throw { background: #B71C1C; }
+    .to-drop  { background: #880E0E; }
+    .to-stall { background: #880E0E; }
+    .to-d     { background: #4A0000; }
+    #undo-btn {
+      flex: 0 0 11%; background: #E8971E;
+      font-size: clamp(0.9em, 2vw, 1.3em); letter-spacing: 2px;
+    }
+    #undo-btn:active { background: #c27a12; }
+    #event-log {
+      flex: 1; min-height: 0; overflow-y: auto;
+      padding: 4px 2px; border-top: 1px solid rgba(255,255,255,0.1);
+    }
+    .event-entry {
+      font-size: clamp(0.5em, 1vw, 0.65em); font-weight: 700;
+      color: rgba(255,255,255,0.65); line-height: 1.45;
+      padding: 3px 0; border-bottom: 1px solid rgba(255,255,255,0.05);
+      display: flex; justify-content: space-between; gap: 6px; letter-spacing: 0.2px;
+    }
+    .event-time { opacity: 0.55; white-space: nowrap; flex-shrink: 0; }
+    .event-goal { color: #81C784; }
+    .event-to   { color: rgba(255,120,120,0.85); }
+    .event-edit, .event-sub { color: rgba(255,255,255,0.3); font-style: italic; }
+
     #scoreboard {
-      display: flex; align-items: stretch; background: #0a0a0a;
-      height: 80px; flex-shrink: 0;
+      display: grid; grid-template-columns: 1fr 1fr var(--action-w);
+      background: #0a0a0a; height: 72px; flex-shrink: 0;
     }
     .score-section {
       flex: 1; display: flex; align-items: center; justify-content: center;
@@ -315,6 +391,8 @@
       cursor: pointer; user-select: none; transition: opacity 0.15s;
     }
     .score-section.ss-inactive { opacity: 0.55; }
+    .score-section.ss-active { box-shadow: inset 0 -5px 0 #4CAF50; }
+    #score-section-1 { border-right: 1px solid rgba(0,0,0,0.35); }
     .score-name {
       font-size: clamp(0.9em, 2.2vw, 1.45em); font-weight: 900; letter-spacing: 3px;
     }
@@ -322,9 +400,8 @@
       font-size: clamp(1.2em, 2.8vw, 1.9em); font-weight: 900;
       min-width: 32px; text-align: center;
     }
-    #sb-divider { width: 2px; background: #2a2a2a; margin: 12px 0; flex-shrink: 0; }
     #timer-wrap {
-      display: flex; align-items: stretch; flex-shrink: 0;
+      display: flex; align-items: stretch; min-width: 0;
     }
     #timer-box {
       background: #1a1a1a; color: #fff;
@@ -342,22 +419,6 @@
     #timer-btn:hover { background: #3a3a3a; }
     #timer-btn.running { background: #B71C1C; }
 
-    /* Drag & drop */
-    .bench-card.dragging, .field-slot.dragging { opacity: 0.35; }
-    .field-slot.drag-over { outline: 3px solid rgba(255,255,255,0.85); outline-offset: -3px; }
-    .bench-grid.drag-over { outline: 2px dashed rgba(255,255,255,0.5); outline-offset: 2px; border-radius: 5px; }
-    #drag-ghost {
-      position: fixed; pointer-events: none; z-index: 9999;
-      opacity: 0.88; border-radius: 7px; overflow: hidden;
-      transform: translate(-50%, -50%) scale(1.06);
-      box-shadow: 0 8px 32px rgba(0,0,0,0.6);
-    }
-
-    /* .field-panel defined above — the field-slot grid lives there */
-    @keyframes d-pulse {
-      0%, 100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-      50% { opacity: 0.55; transform: translate(-50%, -50%) scale(0.96); }
-    }
     @keyframes clock-nudge {
       0%, 100% { outline: 3px solid rgba(255, 193, 7, 0); }
       50%       { outline: 3px solid rgba(255, 193, 7, 0.85); }
@@ -366,148 +427,6 @@
       animation: clock-nudge 1.1s ease-in-out infinite;
       border-radius: 4px;
     }
-    .field-d-prompt {
-      position: absolute; top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
-      background: rgba(200, 30, 30, 0.92); color: #fff;
-      font-size: clamp(0.65em, 1.6vw, 0.95em); font-weight: 900;
-      letter-spacing: 2px; text-transform: uppercase;
-      padding: 8px 20px; border-radius: 10px;
-      pointer-events: none; z-index: 10; white-space: nowrap; display: none;
-      animation: d-pulse 0.9s ease-in-out infinite;
-    }
-    .field-slot {
-      container-type: size;
-      border-radius: 9px; overflow: hidden; position: relative;
-      cursor: pointer; user-select: none; -webkit-user-select: none;
-      touch-action: none;
-      display: flex; flex-direction: column;
-      background: linear-gradient(145deg, #b8b8b8, #939393);
-      border: 3px solid #888; transition: border-color 0.15s, box-shadow 0.15s;
-    }
-    .field-slot.empty { align-items: center; justify-content: center; cursor: default; }
-    .field-slot.empty .slot-label {
-      font-size: clamp(0.9em, 2.2vw, 1.5em); font-weight: 900;
-      color: #555; letter-spacing: 4px;
-    }
-    .field-avatar {
-      flex: 1; min-height: 0; width: 100%; position: relative;
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      font-size: clamp(0.9em, 2.2vw, 1.5em); font-weight: 900; color: #fff;
-      text-align: center; padding: 8px; word-break: break-word; line-height: 1.2;
-    }
-    .field-avatar .num-badge {
-      position: static; transform: none; font-size: 1em; opacity: 0.85;
-    }
-    /* .field-slot .pname replaced by .num-badge */
-    .field-slot.has-disc::after {
-      content: ''; position: absolute;
-      top: 50%; left: 50%; transform: translate(-50%, -50%);
-      height: 85%; aspect-ratio: 1;
-      border: 5px solid #4CAF50; border-radius: 50%;
-      box-shadow: 0 0 18px rgba(76,175,80,0.75);
-      pointer-events: none; z-index: 4;
-    }
-
-    #controls-strip {
-      display: flex; flex-direction: row; gap: 8px; padding: 5px 9px;
-      height: 76px; flex-shrink: 0; background: #111; align-items: stretch;
-    }
-    #turn-area {
-      position: relative; display: flex; align-items: stretch; flex-shrink: 0;
-    }
-    #goal-wrap {
-      flex: 2; display: flex; border-radius: 7px; overflow: hidden;
-    }
-    #goal-btn-2pt {
-      width: 72px; flex-shrink: 0;
-      background: #1a6b1a; color: #fff; border: none; cursor: pointer;
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      gap: 1px; border-right: 2px solid rgba(255,255,255,0.2);
-      transition: background 0.1s;
-    }
-    #goal-btn-2pt:active { background: #135213; }
-    .twopt-num  { font-size: clamp(1.3em, 3vw, 2em); font-weight: 900; line-height: 1; }
-    .twopt-label { font-size: clamp(0.45em, 1vw, 0.6em); font-weight: 900; letter-spacing: 2px; opacity: 0.75; }
-    #goal-btn {
-      flex: 1; background: #43A047; color: #fff;
-      font-family: inherit; font-size: clamp(1.4em, 4vw, 2.4em);
-      font-weight: 900; letter-spacing: 5px;
-      border: none; cursor: pointer; transition: background 0.1s;
-    }
-    #goal-btn:active { background: #2E7D32; }
-    @keyframes goalFlash {
-      0%   { background: #43A047; }
-      40%  { background: #A5D6A7; }
-      100% { background: #43A047; }
-    }
-    @keyframes goalFlash2pt {
-      0%   { background: #1a6b1a; }
-      40%  { background: #43A047; }
-      100% { background: #1a6b1a; }
-    }
-    #goal-btn.flash { animation: goalFlash 0.45s ease-in-out 2; }
-    #goal-btn-2pt.flash { animation: goalFlash2pt 0.45s ease-in-out 2; }
-    #undo-btn {
-      flex: 1; background: #E8971E; color: #fff;
-      font-family: inherit; font-size: clamp(0.95em, 2.5vw, 1.45em);
-      font-weight: 900; letter-spacing: 2px;
-      border: none; border-radius: 7px; cursor: pointer; transition: background 0.1s;
-    }
-    #undo-btn:active { background: #c27a12; }
-
-    /* Event log — right side of controls strip */
-    #event-log {
-      flex: 1.2; min-width: 0; overflow-y: auto;
-      padding: 3px 6px; border-left: 1px solid rgba(255,255,255,0.1);
-      display: flex; flex-direction: column; gap: 0;
-    }
-    .event-entry {
-      font-size: clamp(0.42em, 0.9vw, 0.55em); font-weight: 700;
-      color: rgba(255,255,255,0.65); line-height: 1.45;
-      padding: 2px 0; border-bottom: 1px solid rgba(255,255,255,0.05);
-      flex-shrink: 0; letter-spacing: 0.2px;
-      display: flex; justify-content: space-between; gap: 6px;
-    }
-    .event-time {
-      opacity: 0.55; white-space: nowrap; flex-shrink: 0;
-    }
-    .event-goal { color: #81C784; }
-    .event-to   { color: rgba(255,120,120,0.85); }
-    .event-edit { color: rgba(255,255,255,0.28); font-style: italic; }
-    /* TURN button (in controls strip) */
-    #turn-btn {
-      width: 100%; min-width: 152px; margin: 0;
-      padding: 0 16px; font-family: inherit;
-      font-size: clamp(0.85em, 2vw, 1.2em); font-weight: 900;
-      letter-spacing: 2px; color: #fff; background: #C62828;
-      border: none; border-radius: 7px; cursor: pointer; transition: opacity 0.1s;
-    }
-    #turn-btn:active { opacity: 0.65; }
-    /* Turn submenu — opens upward from #turn-area */
-    #turn-menu {
-      position: absolute; bottom: calc(100% + 5px); left: 0; right: 0;
-      display: flex; flex-direction: column;
-      background: #1a1a1a; border-radius: 8px; overflow: hidden;
-      min-width: 152px; z-index: 30;
-      box-shadow: 0 -6px 24px rgba(0,0,0,0.7);
-      visibility: hidden; pointer-events: none;
-    }
-    #turn-menu.open { visibility: visible; pointer-events: auto; }
-    .to-btn {
-      display: block; width: 100%; margin: 0;
-      padding: 13px 16px; font-family: inherit;
-      font-size: clamp(0.62em, 1.4vw, 0.85em); font-weight: 900;
-      letter-spacing: 1px; color: #fff;
-      border: none; border-bottom: 1px solid rgba(255,255,255,0.08);
-      cursor: pointer; transition: opacity 0.1s;
-    }
-    .to-btn:last-child { border-bottom: none; }
-    .to-btn:active { opacity: 0.65; }
-    .to-throw { background: #B71C1C; }
-    .to-drop  { background: #880E0E; }
-    .to-stall { background: #880E0E; }
-    .to-d     { background: #4A0000; }
 
     /* ── MODAL ──────────────────────────────────────── */
     .overlay {
@@ -732,33 +651,6 @@
     .mode-seg-btn.active { background: #2a7a2a; color: #fff; }
 
     /* ── SINGLE-MODE STRIP (opponent row) ────────────── */
-    #team-row-2.single-strip {
-      flex: none !important;
-      height: 60px; min-height: 0;
-      transition: height 0.2s;
-    }
-    #team-row-2.single-strip.opp-has-disc { height: 90px; }
-    #opponent-strip {
-      display: none;
-      width: 100%; height: 100%; align-items: center; padding: 0 16px; gap: 12px;
-    }
-    #team-row-2.single-strip #opponent-strip { display: flex; }
-    #opp-color-bar { width: 8px; height: 40px; border-radius: 4px; flex-shrink: 0; }
-    #opp-name-label { font-size: 1em; font-weight: 700; color: #fff; letter-spacing: 1px; }
-    #opp-score-label { font-size: 1.6em; font-weight: 900; color: #fff; margin-left: auto; }
-    #opp-disc-badge {
-      display: none;
-      align-items: center; gap: 7px;
-      color: #4CAF50; font-size: 0.75em; font-weight: 700; letter-spacing: 1.5px;
-    }
-    #opp-disc-badge::before {
-      content: '';
-      width: 14px; height: 14px; flex-shrink: 0;
-      border: 3px solid #4CAF50; border-radius: 50%;
-      box-shadow: 0 0 8px rgba(76,175,80,0.7);
-    }
-    #team-row-2.opp-has-disc #opp-disc-badge { display: flex; }
-    #team-row-2.opp-has-disc { background: rgba(76,175,80,0.10); }
 
     /* ── PANEL-TEAM2 COLLAPSE (single mode setup) ────── */
     #panel-team2.single-collapsed .players-header,
@@ -950,7 +842,6 @@
       <span class="score-name" id="score-name-1"></span>
       <span class="score-num"  id="score-num-1">0</span>
     </div>
-    <div id="sb-divider"></div>
     <div class="score-section" id="score-section-2">
       <span class="score-name" id="score-name-2"></span>
       <span class="score-num"  id="score-num-2">0</span>
@@ -962,74 +853,41 @@
     </div>
   </div>
 
-  <!-- Two-team body: both teams stacked vertically, controls strip between them -->
+  <!-- Body: team 1 tiles | team 2 tiles | action column (lines up with the scoreboard above) -->
   <div id="game-body">
-
-  <!-- Top team row (team1 — always stays at top) -->
-  <div id="team-row-1" class="team-row">
-    <div id="bench-panel-1" class="bench-panel">
-      <div class="bench-team-label" id="bench-label-1"></div>
-      <div class="bench-grid" id="bench-grid-1"></div>
-      <div class="bench-footer">
+    <div class="team-panel" id="team-panel-1">
+      <div class="team-panel-head">
+        <span class="team-panel-name" id="team-panel-name-1"></span>
+        <span class="team-panel-count" id="team-panel-count-1"></span>
         <button class="edit-team-btn" data-team="team1">EDIT TEAM</button>
       </div>
+      <div class="d-prompt" id="d-prompt-1">WHO GOT THE D?</div>
+      <div class="tile-grid" id="tile-grid-1"></div>
     </div>
-    <div class="field-panel" id="field-1">
-      <div class="field-slot empty" data-slot="0" data-team="team1"><span class="slot-label">PLAYER</span></div>
-      <div class="field-slot empty" data-slot="1" data-team="team1"><span class="slot-label">PLAYER</span></div>
-      <div class="field-slot empty" data-slot="2" data-team="team1"><span class="slot-label">PLAYER</span></div>
-      <div class="field-slot empty" data-slot="3" data-team="team1"><span class="slot-label">PLAYER</span></div>
-      <div class="field-d-prompt" id="field-d-prompt-1">WHO GOT THE D?</div>
-    </div>
-  </div>
-
-  <!-- Controls strip (between the two team rows) -->
-  <div id="controls-strip">
-    <div id="goal-wrap">
-      <button id="goal-btn-2pt">
-        <span class="twopt-num">2</span>
-        <span class="twopt-label">PTS</span>
-      </button>
-      <button id="goal-btn">GOAL</button>
-    </div>
-    <div id="turn-area">
-      <button id="turn-btn">TURN</button>
-      <div id="turn-menu">
-        <button class="to-btn to-throw" data-to="throwaway">Throwaway</button>
-        <button class="to-btn to-drop"  data-to="drop">Drop</button>
-        <button class="to-btn to-stall" data-to="stall">Stall</button>
-        <button class="to-btn to-d"     data-to="d">D</button>
-      </div>
-    </div>
-    <button id="undo-btn">UNDO</button>
-    <div id="event-log"></div>
-  </div>
-
-  <!-- Bottom team row (team2 — always stays at bottom) -->
-  <div id="team-row-2" class="team-row">
-    <!-- Single-mode opponent strip (shown instead of bench+field in single mode) -->
-    <div id="opponent-strip">
-      <div id="opp-color-bar"></div>
-      <div id="opp-name-label">Opponent</div>
-      <div id="opp-disc-badge">THEIR DISC</div>
-      <div id="opp-score-label">0</div>
-    </div>
-    <div id="bench-panel-2" class="bench-panel">
-      <div class="bench-team-label" id="bench-label-2"></div>
-      <div class="bench-grid" id="bench-grid-2"></div>
-      <div class="bench-footer">
+    <div class="team-panel" id="team-panel-2">
+      <div class="team-panel-head">
+        <span class="team-panel-name" id="team-panel-name-2"></span>
+        <span class="team-panel-count" id="team-panel-count-2"></span>
         <button class="edit-team-btn" data-team="team2">EDIT TEAM</button>
       </div>
+      <div class="d-prompt" id="d-prompt-2">WHO GOT THE D?</div>
+      <div class="tile-grid" id="tile-grid-2"></div>
     </div>
-    <div class="field-panel" id="field-2">
-      <div class="field-slot empty" data-slot="0" data-team="team2"><span class="slot-label">PLAYER</span></div>
-      <div class="field-slot empty" data-slot="1" data-team="team2"><span class="slot-label">PLAYER</span></div>
-      <div class="field-slot empty" data-slot="2" data-team="team2"><span class="slot-label">PLAYER</span></div>
-      <div class="field-slot empty" data-slot="3" data-team="team2"><span class="slot-label">PLAYER</span></div>
-      <div class="field-d-prompt" id="field-d-prompt-2">WHO GOT THE D?</div>
+    <div id="action-col">
+      <button id="goal-btn">GOAL</button>
+      <button id="goal-btn-2pt"><span class="twopt-num">2</span><span class="twopt-label">PT GOAL</span></button>
+      <div id="turn-area">
+        <button id="turn-btn">TURN</button>
+        <div id="turn-menu">
+          <button class="to-btn to-throw" data-to="throwaway">Throwaway</button>
+          <button class="to-btn to-drop"  data-to="drop">Drop</button>
+          <button class="to-btn to-stall" data-to="stall">Stall</button>
+          <button class="to-btn to-d"     data-to="d">D</button>
+        </div>
+      </div>
+      <button id="undo-btn">UNDO</button>
+      <div id="event-log"></div>
     </div>
-  </div>
-
   </div><!-- #game-body -->
 </div>
 
@@ -1556,7 +1414,8 @@ function buildGameState() {
       name: s.name.trim(),
       colorId: s.colorId,
       players,
-      field: [null, null, null, null],
+      field: [0, 1, 2, 3].map(i => (players.length <= 4 && players[i]) ? players[i].id : null),
+      lastActive: {},
       discHolder: null,
       prevDiscHolder: null,
       turnoverUnknown: false,
@@ -1642,31 +1501,9 @@ function render() {
   if (!state.teams.team1 || !state.teams.team2) return;
 
   const isSingle = state.trackingMode === 'single';
-  const row1 = document.getElementById('team-row-1');
-  const row2 = document.getElementById('team-row-2');
+  document.getElementById('game-body').classList.toggle('single', isSingle);
 
-  if (isSingle) {
-    // Single mode: team-row-2 is a fixed-height strip; team-row-1 fills remaining space
-    row1.style.flex = '1';
-    row2.classList.add('single-strip');
-    row2.classList.toggle('opp-has-disc', state.activeTeam === 'team2');
-    row2.style.flex = ''; // CSS handles height via single-strip class
-    // Update opponent strip labels
-    const td2 = state.teams.team2;
-    const nameEl  = document.getElementById('opp-name-label');
-    const scoreEl = document.getElementById('opp-score-label');
-    const barEl   = document.getElementById('opp-color-bar');
-    if (nameEl)  nameEl.textContent  = td2.name || 'Opponent';
-    if (scoreEl) scoreEl.textContent = state.score.team2 ?? 0;
-    if (barEl)   barEl.style.background = getColor(td2.colorId).swatch;
-  } else {
-    // Dual mode: flex-ratio shifts based on focused team
-    row2.classList.remove('single-strip', 'opp-has-disc');
-    row1.style.flex = focusTeam === 'team1' ? '2' : '1';
-    row2.style.flex = focusTeam === 'team2' ? '2' : '1';
-  }
-
-  // Scoreboard — color + active/inactive per team
+  // Scoreboard — color + possession per team (sits directly above each team's tiles)
   ['team1', 'team2'].forEach((key, i) => {
     const n = i + 1;
     const tc = getColor(state.teams[key].colorId);
@@ -1682,13 +1519,11 @@ function render() {
   document.getElementById('score-num-1').textContent  = state.score.team1;
   document.getElementById('score-num-2').textContent  = state.score.team2;
 
-  // Render both teams
-  renderTeamBench('team1');
-  renderTeamBench('team2');
-  renderTeamField('team1');
-  renderTeamField('team2');
+  renderTeamTiles('team1');
+  renderTeamTiles('team2');
+  requestAnimationFrame(layoutTiles);
 
-  // Event log (in controls strip)
+  // Event log (bottom of the action column)
   const logEl = document.getElementById('event-log');
   if (logEl) {
     logEl.innerHTML = '';
@@ -1701,191 +1536,162 @@ function render() {
   }
 }
 
-function renderTeamBench(teamKey) {
+// Every player has a fixed, equal-sized tile. Players on the field are bright,
+// players off it are dimmed. Tapping a tile logs a touch (and marks the player on);
+// the ●/○ toggle in the corner subs a player on or off.
+function renderTeamTiles(teamKey) {
   const n = teamKey === 'team1' ? '1' : '2';
-  // In single mode, hide team2's bench panel entirely (opponent strip takes its place)
+  const panel = document.getElementById(`team-panel-${n}`);
   if (state.trackingMode === 'single' && teamKey === 'team2') {
-    const panel = document.getElementById('bench-panel-2');
-    if (panel) panel.style.display = 'none';
+    panel.style.display = 'none';
     return;
   }
-  // Ensure bench panel is visible in dual mode (in case we switched back from single)
-  const panelEl = document.getElementById(`bench-panel-${n}`);
-  if (panelEl) panelEl.style.display = '';
+  panel.style.display = '';
   const td = state.teams[teamKey];
   const cfg = getCfg(teamKey);
-  const subTextColor = cfg.darkText ? '#333' : 'rgba(255,255,255,0.88)';
-
-  // Bench panel background + label
-  document.getElementById(`bench-panel-${n}`).style.background = cfg.bench;
-  const lbl = document.getElementById(`bench-label-${n}`);
-  lbl.textContent = state.trackingMode === 'single' ? 'Bench' : cfg.name;
-  lbl.style.color = subTextColor;
-
-  // Build bench cards
   const onField = new Set(td.field.filter(Boolean));
-  const benchPlayers = td.players.filter(p => !onField.has(p.id));
-  const benchGrid = document.getElementById(`bench-grid-${n}`);
-  benchGrid.innerHTML = '';
-
-  benchPlayers.forEach(player => {
-    const card = document.createElement('div');
-    card.className = 'bench-card';
-    card.style.background = cfg.swatch;
-    card.style.border = cfg.darkText ? '2px solid rgba(0,0,0,0.18)' : '2px solid rgba(255,255,255,0.18)';
-
-    const av = document.createElement('div');
-    av.className = 'avatar';
-    av.style.background = cfg.swatch;
-    av.style.color = cfg.darkText ? '#111' : '#fff';
-
-    const nameEl = document.createElement('span');
-    nameEl.className = 'card-name';
-    nameEl.textContent = player.name;
-    av.appendChild(nameEl);
-    card.appendChild(av);
-
-    const ptB = document.createElement('span');
-    ptB.className = 'pt-badge';
-    ptB.dataset.pt = player.id;
-    ptB.style.color = cfg.darkText ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.8)';
-    ptB.textContent = fmtPT(state.playTime[player.id] || 0);
-    av.appendChild(ptB);
-
-    const pst = getPlayerStat(player.id);
-    const totalGoals = pst.goals1 + pst.goals2 * 2;
-    const statParts = [];
-    if (totalGoals > 0) statParts.push(totalGoals + 'G');
-    if (pst.assists > 0) statParts.push(pst.assists + 'A');
-    if (pst.ds > 0) statParts.push(pst.ds + 'D');
-    if (statParts.length > 0) {
-      const stB = document.createElement('span');
-      stB.className = 'stat-badge';
-      stB.style.color = cfg.darkText ? 'rgba(0,0,0,0.75)' : 'rgba(255,255,255,0.85)';
-      stB.textContent = statParts.join(' ');
-      av.appendChild(stB);
-    }
-
-    if (player.number && player.number.trim()) {
-      const nm = document.createElement('span');
-      nm.className = 'num-badge';
-      nm.style.color = cfg.darkText ? 'rgba(0,0,0,0.75)' : 'rgba(255,255,255,0.85)';
-      nm.textContent = '#' + player.number.trim();
-      av.appendChild(nm);
-    }
-
-    card.addEventListener('pointerdown', e => startDrag(e, player.id, null, teamKey));
-    card.addEventListener('click', () => { if (justDragged) return; onBenchClick(player.id, teamKey); });
-    benchGrid.appendChild(card);
-  });
-
-  requestAnimationFrame(() => syncBenchRows(`bench-grid-${n}`));
-}
-
-function renderTeamField(teamKey) {
-  const n = teamKey === 'team1' ? '1' : '2';
-  // In single mode, hide team2's field entirely
-  if (state.trackingMode === 'single' && teamKey === 'team2') {
-    const wrap = document.getElementById(`field-${n}`);
-    if (wrap) wrap.style.display = 'none';
-    return;
-  }
-  // Ensure field is visible in dual mode
-  const fieldWrap = document.getElementById(`field-${n}`);
-  if (fieldWrap) fieldWrap.style.display = '';
-  const td = state.teams[teamKey];
-  const cfg = getCfg(teamKey);
-  // In single mode, team1 cards are always tappable (to log touches and reclaim possession)
-  // In dual mode, active = has possession OR unassigned (either team can claim first touch)
+  // In single mode, team1 tiles are always tappable (to log touches and reclaim possession).
+  // In dual mode, active = has possession OR unassigned (either team can claim first touch).
   const isActive = state.trackingMode === 'single'
     ? (teamKey === 'team1')
     : (state.activeTeam === null || state.activeTeam === teamKey);
 
-  document.querySelectorAll(`#field-${n} .field-slot`).forEach((slot, i) => {
-    const pid = td.field[i];
-    slot.className = 'field-slot';
-    slot.innerHTML = '';
-    slot.onclick = null;
+  panel.style.background = cfg.bench;
+  panel.classList.toggle('dark-text', cfg.darkText);
+  panel.classList.toggle('inactive', !isActive);
+  document.getElementById(`team-panel-name-${n}`).textContent = td.name;
+  const countEl = document.getElementById(`team-panel-count-${n}`);
+  countEl.textContent = `ON FIELD ${onField.size}/${td.field.length}`;
+  countEl.classList.toggle('short', onField.size < td.field.length);
 
-    if (!pid) {
-      slot.classList.add('empty');
-      const lbl = document.createElement('span');
-      lbl.className = 'slot-label'; lbl.textContent = 'PLAYER';
-      slot.appendChild(lbl);
-      return;
-    }
+  const grid = document.getElementById(`tile-grid-${n}`);
+  grid.innerHTML = '';
+  td.players.forEach(player => {
+    const on = onField.has(player.id);
+    const tile = document.createElement('div');
+    tile.className = 'tile' + (on ? ' on' : ' off') + (player.id === td.discHolder ? ' has-disc' : '');
+    tile.style.background = cfg.swatch;
+    tile.style.color = cfg.darkText ? '#111' : '#fff';
 
-    const player = getPlayerById(pid);
-    if (!player) return;
+    const name = document.createElement('span');
+    name.className = 'tile-name';
+    name.textContent = player.name;
+    tile.appendChild(name);
 
-    const av = document.createElement('div');
-    av.className = 'field-avatar';
-    av.style.background = cfg.swatch;
-    av.style.color = cfg.darkText ? '#111' : '#fff';
-    const nameSpan = document.createElement('span');
-    nameSpan.textContent = player.name;
-    av.appendChild(nameSpan);
     if (player.number && player.number.trim()) {
       const nm = document.createElement('span');
-      nm.className = 'num-badge';
-      nm.style.color = cfg.darkText ? 'rgba(0,0,0,0.75)' : 'rgba(255,255,255,0.85)';
+      nm.className = 'tile-num';
       nm.textContent = '#' + player.number.trim();
-      av.appendChild(nm);
-    }
-    slot.appendChild(av);
-
-    const ptF = document.createElement('span');
-    ptF.className = 'pt-badge';
-    ptF.dataset.pt = player.id;
-    ptF.style.color = cfg.darkText ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.8)';
-    ptF.textContent = fmtPT(state.playTime[player.id] || 0);
-    slot.appendChild(ptF);
-
-    const pstF = getPlayerStat(pid);
-    const totalGoalsF = pstF.goals1 + pstF.goals2 * 2;
-    const statPartsF = [];
-    if (totalGoalsF > 0) statPartsF.push(totalGoalsF + 'G');
-    if (pstF.assists > 0) statPartsF.push(pstF.assists + 'A');
-    if (pstF.ds > 0) statPartsF.push(pstF.ds + 'D');
-    if (statPartsF.length > 0) {
-      const stF = document.createElement('span');
-      stF.className = 'stat-badge';
-      stF.style.color = cfg.darkText ? 'rgba(0,0,0,0.75)' : 'rgba(255,255,255,0.85)';
-      stF.textContent = statPartsF.join(' ');
-      slot.appendChild(stF);
+      tile.appendChild(nm);
     }
 
-    if (pid === td.discHolder) slot.classList.add('has-disc');
-
-    slot.addEventListener('pointerdown', e => startDrag(e, pid, i, teamKey));
-    // Only register touch clicks for the active (offence) team
-    if (isActive) {
-      slot.onclick = () => { if (justDragged) return; onFieldClick(i, teamKey); };
+    const pst = getPlayerStat(player.id);
+    const totalGoals = pst.goals1 + pst.goals2 * 2;
+    const parts = [];
+    if (totalGoals > 0) parts.push(totalGoals + 'G');
+    if (pst.assists > 0) parts.push(pst.assists + 'A');
+    if (pst.ds > 0) parts.push(pst.ds + 'D');
+    if (parts.length) {
+      const st = document.createElement('span');
+      st.className = 'tile-stats';
+      st.textContent = parts.join(' ');
+      tile.appendChild(st);
     }
+
+    const toggle = document.createElement('button');
+    toggle.className = 'tile-toggle';
+    toggle.textContent = on ? '●' : '○';
+    toggle.setAttribute('aria-label', on ? `${player.name} is on the field — tap to sub off` : `${player.name} is off — tap to sub on`);
+    toggle.addEventListener('click', e => { e.stopPropagation(); toggleOnField(player.id, teamKey); });
+    tile.appendChild(toggle);
+
+    if (isActive) tile.addEventListener('click', () => onTileTap(player.id, teamKey));
+    grid.appendChild(tile);
   });
 
-  // Show/hide D pickup prompt for this team's field
-  const dPrompt = document.getElementById(`field-d-prompt-${n}`);
-  if (dPrompt) dPrompt.style.display = (isActive && td.turnoverUnknown) ? 'flex' : 'none';
+  const dPrompt = document.getElementById(`d-prompt-${n}`);
+  dPrompt.style.display = (isActive && td.turnoverUnknown) ? 'block' : 'none';
 }
+
+// Size the grids so every tile, on both teams, is the same size and everyone fits.
+function layoutTiles() {
+  if (!state.teams || !state.teams.team1) return;
+  const keys = state.trackingMode === 'single' ? ['team1'] : ['team1', 'team2'];
+  const count = Math.max(1, ...keys.map(k => state.teams[k].players.length));
+  const ref = document.getElementById('tile-grid-1');
+  const W = ref.clientWidth, H = ref.clientHeight;
+  if (!W || !H) return;
+  const gap = 8;
+  let best = null;
+  for (let c = 1; c <= count; c++) {
+    const r = Math.ceil(count / c);
+    const w = (W - gap * (c - 1)) / c;
+    const h = (H - gap * (r - 1)) / r;
+    if (w <= 0 || h <= 0) continue;
+    const score = Math.min(w, h * 1.6); // prefer tiles a little wider than tall
+    if (!best || score > best.score) best = { c, r, h, score };
+  }
+  if (!best) return;
+  keys.forEach(k => {
+    const grid = document.getElementById(`tile-grid-${k === 'team1' ? '1' : '2'}`);
+    grid.style.gridTemplateColumns = `repeat(${best.c}, minmax(0, 1fr))`;
+    grid.style.gridTemplateRows = `repeat(${best.r}, minmax(0, 1fr))`;
+  });
+}
+new ResizeObserver(() => layoutTiles()).observe(document.getElementById('game-body'));
 
 // ============================================================
 // GAME INTERACTIONS
 // ============================================================
-function onBenchClick(pid, teamKey) {
+function noteActivity(td, pid) {
+  if (!td.lastActive) td.lastActive = {};
+  td.lastActive[pid] = Date.now();
+}
+
+// Put a player on the field. If the field is already full, the player who has gone
+// longest without touching the disc comes off (never the current thrower or assister).
+// Returns the id of the player who came off, if any. Caller pushes history.
+function markOnField(teamKey, pid) {
   const td = state.teams[teamKey];
-  const emptyIdx = td.field.indexOf(null);
-  if (emptyIdx === -1) return;
+  if (td.field.includes(pid)) return null;
+  let idx = td.field.indexOf(null);
+  let removed = null;
+  if (idx === -1) {
+    const keep = new Set([td.discHolder, td.prevDiscHolder]);
+    const act = td.lastActive || {};
+    td.field.forEach((p, i) => {
+      if (keep.has(p)) return;
+      if (idx === -1 || (act[p] || 0) < (act[td.field[idx]] || 0)) idx = i;
+    });
+    if (idx === -1) idx = 0;
+    removed = td.field[idx];
+  }
+  td.field[idx] = pid;
+  noteActivity(td, pid);
+  const t = timerSeconds, at = Date.now();
+  if (removed) state.eventLog.push({ text: `${getPlayerName(removed)} off`, type: 'sub', exportHide: true, t, at, team: teamKey });
+  state.eventLog.push({ text: `${getPlayerName(pid)} on`, type: 'sub', exportHide: true, t, at, team: teamKey });
+  return removed;
+}
+
+function toggleOnField(pid, teamKey) {
+  const td = state.teams[teamKey];
   pushHistory();
-  td.field[emptyIdx] = pid;
+  const idx = td.field.indexOf(pid);
+  if (idx !== -1) {
+    td.field[idx] = null;
+    state.eventLog.push({ text: `${getPlayerName(pid)} off`, type: 'sub', exportHide: true, t: timerSeconds, at: Date.now(), team: teamKey });
+  } else {
+    markOnField(teamKey, pid);
+  }
   saveState(); render();
 }
 
-function onFieldClick(idx, teamKey) {
+function onTileTap(pid, teamKey) {
   const isSingle = state.trackingMode === 'single';
   let historyPushed = false;
 
-  // Single mode: tapping any team1 card while opponent has possession → reclaim
+  // Single mode: tapping any team1 tile while opponent has possession → reclaim
   if (isSingle && teamKey === 'team1' && state.activeTeam === 'team2') {
     pushHistory();
     historyPushed = true;
@@ -1896,7 +1702,7 @@ function onFieldClick(idx, teamKey) {
     // Fall through to record the touch for this team1 player
   }
 
-  // If possession not yet assigned, first click claims it for this team
+  // If possession not yet assigned, first tap claims it for this team
   if (state.activeTeam === null) {
     state.activeTeam = teamKey;
     focusTeam = teamKey;
@@ -1904,11 +1710,12 @@ function onFieldClick(idx, teamKey) {
   // Only active (offence) team can log touches
   if (teamKey !== state.activeTeam) return;
   const td = state.teams[teamKey];
-  const pid = td.field[idx];
-  if (!pid) return;
-  // Re-clicking the current disc holder is a no-op — green stays, no extra touch
+  // Re-tapping the current disc holder is a no-op — green stays, no extra touch
   if (!td.turnoverUnknown && td.discHolder === pid) return;
   if (!historyPushed) pushHistory();
+  // Anyone who touches the disc is on the field
+  markOnField(teamKey, pid);
+  noteActivity(td, pid);
   if (td.turnoverUnknown) {
     // D pickup — credit the defender, no assister
     td.prevDiscHolder = null;
@@ -2023,6 +1830,7 @@ function pushHistory() {
     ...state.teams[key],
     players: state.teams[key].players.map(p => ({ ...p })),
     field: [...state.teams[key].field],
+    lastActive: { ...(state.teams[key].lastActive || {}) },
   });
   state.history.push({
     activeTeam: state.activeTeam,
@@ -2355,125 +2163,6 @@ function saveEditModal() {
   if (!validIds.has(td.discHolder)) td.discHolder = null;
   document.getElementById('edit-modal').style.display = 'none';
   saveState(); render();
-}
-
-// ============================================================
-// DRAG & DROP
-// ============================================================
-let drag = null;
-let justDragged = false;
-const DRAG_THRESHOLD = 8;
-
-function startDrag(e, playerId, fromSlot, teamKey) {
-  if (e.pointerType === 'mouse' && e.button !== 0) return;
-  e.preventDefault();
-  const sourceEl = e.currentTarget;
-  drag = {
-    playerId, fromSlot, teamKey, sourceEl, ghost: null,
-    startX: e.clientX, startY: e.clientY, didDrag: false,
-    rect: sourceEl.getBoundingClientRect(),
-    pointerId: e.pointerId,
-  };
-  // setPointerCapture keeps events flowing on iOS Safari even if the finger
-  // leaves the originating element, preventing spurious pointercancel events.
-  try { sourceEl.setPointerCapture(e.pointerId); } catch(_) {}
-  document.addEventListener('pointermove', onDragMove);
-  document.addEventListener('pointerup', onDragEnd);
-  document.addEventListener('pointercancel', onDragEnd);
-}
-
-function activateDrag() {
-  if (!drag || drag.didDrag) return;
-  drag.didDrag = true;
-  const ghost = drag.sourceEl.cloneNode(true);
-  ghost.id = 'drag-ghost';
-  ghost.style.width  = drag.rect.width  + 'px';
-  ghost.style.height = drag.rect.height + 'px';
-  document.body.appendChild(ghost);
-  drag.ghost = ghost;
-  drag.sourceEl.classList.add('dragging');
-  positionGhost(drag.startX, drag.startY);
-}
-
-function positionGhost(x, y) {
-  if (!drag || !drag.ghost) return;
-  drag.ghost.style.left = x + 'px';
-  drag.ghost.style.top  = y + 'px';
-}
-
-function onDragMove(e) {
-  if (!drag) return;
-  if (!drag.didDrag && Math.hypot(e.clientX - drag.startX, e.clientY - drag.startY) > DRAG_THRESHOLD) {
-    activateDrag();
-  }
-  if (!drag.didDrag) return;
-  positionGhost(e.clientX, e.clientY);
-  document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
-  const t = getDragTarget(e.clientX, e.clientY);
-  if (t) t.classList.add('drag-over');
-}
-
-function getDragTarget(x, y) {
-  if (!drag) return null;
-  const el = document.elementFromPoint(x, y);
-  if (!el) return null;
-  // Field slot — only accept slots belonging to the same team
-  const slot = el.closest('.field-slot');
-  if (slot && slot.dataset.team === drag.teamKey) return slot;
-  // Bench grid — only allow field→bench (not bench→bench), same team
-  if (drag.fromSlot !== null) {
-    const bp = el.closest('.bench-panel');
-    if (bp) {
-      const targetTeam = bp.id === 'bench-panel-1' ? 'team1' : 'team2';
-      if (targetTeam === drag.teamKey) {
-        return bp.querySelector('.bench-grid');
-      }
-    }
-  }
-  return null;
-}
-
-function onDragEnd(e) {
-  document.removeEventListener('pointermove', onDragMove);
-  document.removeEventListener('pointerup', onDragEnd);
-  document.removeEventListener('pointercancel', onDragEnd);
-  if (!drag) return;
-  document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
-  drag.sourceEl.classList.remove('dragging');
-  if (drag.ghost) drag.ghost.remove();
-  // pointercancel means iOS aborted the gesture — clean up but don't drop
-  if (drag.didDrag && e.type !== 'pointercancel') {
-    executeDrop(getDragTarget(e.clientX, e.clientY));
-    justDragged = true;
-    setTimeout(() => { justDragged = false; }, 150);
-  }
-  drag = null;
-}
-
-function executeDrop(target) {
-  if (!target || !drag) return;
-  const td = state.teams[drag.teamKey];
-  if (target.classList.contains('field-slot')) {
-    const toSlot = parseInt(target.dataset.slot);
-    if (drag.fromSlot === toSlot) return;
-    pushHistory();
-    if (drag.fromSlot === null) {
-      // bench → field: displaced player (if any) returns to bench automatically
-      td.field[toSlot] = drag.playerId;
-    } else {
-      // field → field: swap
-      const displaced = td.field[toSlot];
-      td.field[toSlot] = drag.playerId;
-      td.field[drag.fromSlot] = displaced;
-    }
-    saveState(); render();
-  } else if (target.classList.contains('bench-grid')) {
-    // field → bench
-    pushHistory();
-    td.field[drag.fromSlot] = null;
-    if (td.discHolder === drag.playerId) td.discHolder = null;
-    saveState(); render();
-  }
 }
 
 // ============================================================
@@ -2854,12 +2543,6 @@ document.getElementById('add-team2').addEventListener('click', () => addSetupPla
 document.querySelectorAll('.edit-team-btn').forEach(btn => {
   btn.addEventListener('click', () => openEditModal(btn.dataset.team));
 });
-document.getElementById('score-section-1').addEventListener('click', () => {
-  if (focusTeam !== 'team1') { focusTeam = 'team1'; render(); }
-});
-document.getElementById('score-section-2').addEventListener('click', () => {
-  if (focusTeam !== 'team2') { focusTeam = 'team2'; render(); }
-});
 document.getElementById('goal-btn').addEventListener('click', () => onGoal(1));
 document.getElementById('goal-btn-2pt').addEventListener('click', () => onGoal(2));
 document.getElementById('undo-btn').addEventListener('click', onUndo);
@@ -2924,43 +2607,6 @@ document.getElementById('save-edit-btn').addEventListener('click', saveEditModal
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js').catch(() => {});
 }
-
-// ============================================================
-// BENCH GRID ROW SYNC
-// CSS Grid auto-track sizing ignores aspect-ratio on grid items,
-// so row tracks end up too short and cards overlap. Fix: explicitly
-// set grid-auto-rows to the computed column track width.
-// ============================================================
-function syncBenchRows(gridId) {
-  const grid = document.getElementById(gridId);
-  if (!grid) return;
-  const cards = grid.querySelectorAll('.bench-card');
-  const n = cards.length;
-  if (n === 0) return;
-
-  const pad = 14;  // 7px padding × 2 sides
-  const gap = 10;  // gap between columns / rows
-  const cols = 2;
-  const rows = Math.ceil(n / cols);
-
-  const colW = (grid.clientWidth - pad - gap) / cols;
-  const availH = grid.clientHeight - pad - (rows - 1) * gap;
-  if (colW <= 0 || availH <= 0) return;
-
-  // Square when there's room; shrink row height to fit all cards when crowded
-  const rowH = Math.max(Math.floor(availH / rows), 24);
-  const size = Math.min(colW, rowH);
-  grid.style.gridAutoRows = size + 'px';
-
-  // Hide pt/stat badges when cards are too small to show them clearly
-  grid.classList.toggle('bench-compact', size < 70);
-}
-// Re-sync whenever either bench panel resizes
-const _benchResizeObs = new ResizeObserver(entries => {
-  entries.forEach(e => syncBenchRows(e.target.id));
-});
-_benchResizeObs.observe(document.getElementById('bench-grid-1'));
-_benchResizeObs.observe(document.getElementById('bench-grid-2'));
 
 // ============================================================
 // INIT
