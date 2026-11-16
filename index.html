@@ -442,6 +442,17 @@
       font-size: 1.1em; letter-spacing: 2px;
       margin-bottom: 14px; text-align: center; flex-shrink: 0;
     }
+    .modal-field-label {
+      font-size: 0.62em; font-weight: 900; letter-spacing: 2px;
+      color: rgba(255,255,255,0.5); margin-bottom: 6px; flex-shrink: 0;
+    }
+    .modal-team-name-input {
+      background: #1a1a1a; border: 1px solid #3a3a3a; border-radius: 6px;
+      color: #fff; font-family: inherit; font-size: 1em; font-weight: 900;
+      letter-spacing: 1px; padding: 9px 10px; outline: none;
+      margin-bottom: 14px; flex-shrink: 0;
+    }
+    .modal-team-name-input:focus { border-color: rgba(255,255,255,0.5); }
     .modal-player-list {
       flex: 1; overflow-y: auto;
       display: flex; flex-direction: column; gap: 7px; margin-bottom: 12px;
@@ -898,6 +909,10 @@
 <div class="overlay" id="edit-modal" style="display:none">
   <div class="modal">
     <h2 id="edit-modal-title">EDIT TEAM</h2>
+    <label class="modal-field-label" for="edit-team-name">TEAM NAME</label>
+    <input class="modal-team-name-input" id="edit-team-name" type="text" maxlength="16"
+      autocomplete="off" spellcheck="false" placeholder="Team name">
+    <div class="modal-field-label">PLAYERS</div>
     <div class="modal-player-list" id="edit-player-list"></div>
     <div class="modal-footer">
       <button class="btn-add"    id="add-player-btn">+ ADD PLAYER</button>
@@ -2127,6 +2142,7 @@ function openEditModal(teamKey) {
   const cfg = getCfg(editTeamKey);
   editBuffer = td.players.map(p => ({ ...p }));
   document.getElementById('edit-modal-title').textContent = `EDIT ${cfg.name}`;
+  document.getElementById('edit-team-name').value = td.name || '';
   renderEditList();
   document.getElementById('edit-modal').style.display = 'flex';
 }
@@ -2170,6 +2186,11 @@ function addPlayerToModal() {
 
 function saveEditModal() {
   const td = getTeamData(editTeamKey);
+  const newName = document.getElementById('edit-team-name').value.trim();
+  if (newName && newName !== td.name) {
+    state.eventLog.push({ text: `Team renamed: ${td.name} → ${newName}`, type: 'edit', exportHide: true, t: timerSeconds, at: Date.now(), team: editTeamKey });
+    td.name = newName; // a blank name keeps the old one
+  }
   td.players = editBuffer.filter(p => p.name.trim()).map(p => ({ ...p, name: p.name.trim(), number: p.number.trim() }));
   const validIds = new Set(td.players.map(p => p.id));
   td.field = td.field.map(pid => (validIds.has(pid) ? pid : null));
