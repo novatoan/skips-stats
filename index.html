@@ -123,7 +123,7 @@
     }
     .setup-panel {
       flex: 1; display: flex; flex-direction: column;
-      padding: 14px 16px 10px;
+      padding: 14px 16px calc(10px + var(--kb-pad, 0px));
       overflow-y: auto;
       --panel-color: #1565C0;
       --panel-text: #fff;
@@ -1353,6 +1353,62 @@ function addSetupPlayer(key) {
     const inputs = document.querySelectorAll(`#list-${key} .setup-name-input`);
     if (inputs.length) inputs[inputs.length - 1].focus();
   }, 30);
+}
+
+// ── Keep the player row being typed in visible above the on-screen keyboard ──
+// The setup panels are full-height, so on iPad the keyboard covers the lower rows.
+// visualViewport tells us what part of the screen is still visible; we pad the
+// panel so it can scroll far enough, then scroll so the active row sits just above
+// the keyboard with the previous row (the one just typed) still in view.
+function setKeyboardPad(px) {
+  document.getElementById('setup-body').style.setProperty('--kb-pad', px + 'px');
+}
+
+function keepSetupRowVisible() {
+  const vv = window.visualViewport;
+  const input = document.activeElement;
+  const row = input && input.closest && input.closest('#setup-body .player-row');
+  if (!vv || !row) { setKeyboardPad(0); return; }
+  const panel = row.closest('.setup-panel');
+  const visTop = vv.offsetTop, visBottom = vv.offsetTop + vv.height;
+  const pRect = panel.getBoundingClientRect();
+  setKeyboardPad(Math.max(0, pRect.bottom - visBottom));
+
+  const viewTop = Math.max(pRect.top, visTop);
+  const viewBottom = Math.min(pRect.bottom, visBottom);
+  const margin = 12;
+  const rRect = row.getBoundingClientRect();
+  const prev = row.previousElementSibling;
+  const wantTop = prev ? prev.getBoundingClientRect().top : rRect.top;
+  if (rRect.bottom + margin > viewBottom) {
+    panel.scrollTop += rRect.bottom + margin - viewBottom;      // active row under keyboard → lift it
+  } else if (wantTop - margin < viewTop) {
+    panel.scrollTop -= Math.min(viewTop - (wantTop - margin),  // previous row hidden above → show it,
+                                viewBottom - (rRect.bottom + margin)); // without pushing active row down out of view
+  }
+}
+
+let kbRowTimer = null;
+function scheduleKeepSetupRowVisible() {
+  // Run now and again after the keyboard finishes animating in
+  clearTimeout(kbRowTimer);
+  requestAnimationFrame(keepSetupRowVisible);
+  kbRowTimer = setTimeout(keepSetupRowVisible, 350);
+}
+
+document.addEventListener('focusin', e => {
+  if (e.target.closest && e.target.closest('#setup-body .player-row')) scheduleKeepSetupRowVisible();
+});
+document.addEventListener('focusout', () => {
+  // Only clear the padding if focus didn't move to another player input
+  setTimeout(() => {
+    const a = document.activeElement;
+    if (!(a && a.closest && a.closest('#setup-body .player-row'))) setKeyboardPad(0);
+  }, 100);
+});
+if (window.visualViewport) {
+  window.visualViewport.addEventListener('resize', keepSetupRowVisible);
+  window.visualViewport.addEventListener('scroll', keepSetupRowVisible);
 }
 
 function validateAndStartGame() {
