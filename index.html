@@ -565,6 +565,11 @@
       padding: 8px 16px; font-family: inherit; font-size: 0.78em;
       font-weight: 900; letter-spacing: 1px; cursor: pointer;
     }
+    #stats-xlsx-btn {
+      background: #1B5E20; color: #fff; border: none; border-radius: 6px;
+      padding: 8px 16px; font-family: inherit; font-size: 0.78em;
+      font-weight: 900; letter-spacing: 1px; cursor: pointer;
+    }
     #stats-close-btn {
       background: #333; color: #fff; border: none; border-radius: 6px;
       padding: 8px 14px; font-family: inherit; font-size: 0.78em;
@@ -676,6 +681,43 @@
     #panel-team2.single-collapsed .player-list,
     #panel-team2.single-collapsed .add-btn,
     #panel-team2.single-collapsed .roster-actions-row { display: none; }
+
+    /* ── HOW TO USE ─────────────────────────────────── */
+    #help-btn { margin-top: 12px; }
+    #help-screen { flex-direction: column; background: #0f0f0f; }
+    #help-header {
+      display: flex; align-items: center; justify-content: space-between;
+      background: #111; border-bottom: 1px solid #222;
+      padding: 10px 16px; flex-shrink: 0; gap: 12px;
+    }
+    #help-header h2 {
+      color: #fff; font-size: clamp(0.9em, 2.2vw, 1.3em);
+      font-weight: 900; letter-spacing: 4px; flex: 1; text-align: center;
+    }
+    #help-back-btn { background: #2a2a2a; }
+    .help-spacer { width: 90px; flex-shrink: 0; }
+    #help-body {
+      flex: 1; overflow-y: auto; padding: 20px 24px 40px;
+      color: rgba(255,255,255,0.85); font-family: Arial, sans-serif; line-height: 1.55;
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; align-content: start;
+    }
+    .help-lead { grid-column: 1 / -1; font-size: 1.05em; color: #fff; margin: 0 0 4px; max-width: 900px; }
+    #help-body section { background: #181818; border: 1px solid #2a2a2a; border-radius: 10px; padding: 14px 18px; }
+    #help-body h3 {
+      font-family: inherit; color: #fff; font-size: 1em; letter-spacing: 1px; margin: 0 0 8px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .help-num {
+      width: 26px; height: 26px; border-radius: 50%; background: #1a6b1a; color: #fff;
+      display: inline-flex; align-items: center; justify-content: center; font-size: 0.85em; flex-shrink: 0;
+    }
+    #help-body ul { margin: 0; padding-left: 20px; }
+    #help-body li { margin-bottom: 6px; font-size: 0.92em; }
+    #help-body b { color: #fff; }
+    .help-glossary { grid-column: 1 / -1; }
+    .help-glossary dl { display: grid; grid-template-columns: max-content 1fr; gap: 6px 16px; margin: 0; font-size: 0.92em; }
+    .help-glossary dt { font-weight: 900; color: #fff; }
+    .help-glossary dd { margin: 0; }
 
     /* ── PAST GAMES ─────────────────────────────────── */
     #games-screen { flex-direction: column; background: #0f0f0f; }
@@ -822,6 +864,98 @@
   <button id="new-game-btn" class="home-btn primary">NEW GAME</button>
   <button id="resume-btn"   class="home-btn secondary" style="display:none">RESUME GAME</button>
   <button id="games-btn"    class="home-btn secondary">PAST GAMES</button>
+  <button id="help-btn"     class="home-btn secondary">❔ HOW TO USE THIS APP</button>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     HOW TO USE — a plain-language guide for first-timers
+══════════════════════════════════════════════════ -->
+<div id="help-screen" class="screen">
+  <div id="help-header">
+    <button class="setup-nav-btn" id="help-back-btn">← BACK</button>
+    <h2>HOW TO USE THIS APP</h2>
+    <span class="help-spacer"></span>
+  </div>
+  <div id="help-body">
+    <p class="help-lead">This app keeps stats for a Goaltimate game while you watch it. You tap a player's tile every time
+      they catch the disc, and the app works out touches, goals, assists, turnovers and playing time for you.
+      Hold the iPad sideways.</p>
+
+    <section>
+      <h3><span class="help-num">1</span>Set up the game</h3>
+      <ul>
+        <li>Tap <b>NEW GAME</b>.</li>
+        <li>Choose <b>ONE TEAM</b> to track just your team, or <b>TWO TEAMS</b> to track both.</li>
+        <li>Type each team's name, pick a color, and add players (name and number). Press Return to jump to the next row.</li>
+        <li>Optional: tap the camera next to a player to add their photo.</li>
+        <li>Optional: <b>SAVE ROSTER</b> keeps a team for next time; <b>LOAD ROSTER</b> brings it back.</li>
+        <li>Tap <b>START GAME</b>.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h3><span class="help-num">2</span>Start the clock</h3>
+      <ul>
+        <li>Tap <b>▶</b> at the top right when play begins, and again to pause.</li>
+        <li>If you record a touch while the clock is stopped, it flashes yellow as a reminder.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h3><span class="help-num">3</span>Tap whoever has the disc</h3>
+      <ul>
+        <li>Every time a player catches the disc, tap their tile. A green circle shows who has it.</li>
+        <li>That's it — passes, touches and who's on the field are all worked out from your taps.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h3><span class="help-num">4</span>Record goals and turnovers</h3>
+      <ul>
+        <li><b>GOAL</b> (or <b>2 PT GOAL</b>): the player holding the disc scores, and the player who threw it to them gets the assist.
+          The scorer's team keeps the disc.</li>
+        <li><b>TURN</b>: pick what happened — Throwaway, Drop, Stall or D. The disc goes to the other team.</li>
+        <li>After a <b>D</b>, the app asks <b>WHO GOT THE D?</b> — tap that defender.</li>
+        <li>Made a mistake? <b>UNDO</b> takes back the last thing you did. Tap it again to go further back (up to 40 steps).</li>
+      </ul>
+    </section>
+
+    <section>
+      <h3><span class="help-num">5</span>Keep track of who's on the field</h3>
+      <ul>
+        <li>Bright tiles are on the field; dimmed tiles are off. Each team can have 4 on at once.</li>
+        <li>Tapping a player puts them on automatically. To sub someone on or off by hand, tap the small
+          <b>●</b> / <b>○</b> in the corner of their tile.</li>
+        <li>Getting this right is what makes playing time and +/- accurate.</li>
+        <li><b>EDIT TEAM</b> lets you add, remove or rename players (and the team) mid-game.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h3><span class="help-num">6</span>Finish and get your stats</h3>
+      <ul>
+        <li>Tap <b>END</b>, then <b>VIEW STATS</b>.</li>
+        <li><b>EXPORT CSV</b> or <b>EXCEL</b> saves a spreadsheet with every player's stats, who threw to whom, and a
+          timestamped log of the whole game. <b>BACKUP</b> saves a complete copy of everything.</li>
+        <li>Every game is saved automatically as you play, so nothing is lost if the app closes. Find old games
+          under <b>PAST GAMES</b> on the home screen and export them any time.</li>
+      </ul>
+    </section>
+
+    <section class="help-glossary">
+      <h3>What the stats mean</h3>
+      <dl>
+        <dt>TCH</dt><dd>Touches — times the player had the disc</dd>
+        <dt>AST</dt><dd>Assists — threw the pass that scored</dd>
+        <dt>TO</dt><dd>Turnovers — charged to the last player who had the disc</dd>
+        <dt>D</dt><dd>Defensive block that won the disc back</dd>
+        <dt>POSS WON</dt><dd>Times the other team lost the disc while this player was on the field</dd>
+        <dt>POSS LOST</dt><dd>Times this player's team lost the disc while they were on the field</dd>
+        <dt>+/-</dt><dd>Points scored minus points allowed while on the field</dd>
+        <dt>TIME</dt><dd>Playing time (counts only while the clock runs)</dd>
+      </dl>
+    </section>
+  </div>
 </div>
 
 <!-- ══════════════════════════════════════════════════
@@ -835,7 +969,7 @@
   </div>
   <div id="games-list"></div>
   <div id="games-footnote">Games are saved automatically as you play and stay on this device until you delete them.
-    CSV opens in a spreadsheet. BACKUP is a complete copy of everything recorded.</div>
+    CSV is one sheet. EXCEL has a tab for each section. BACKUP is a complete copy of everything recorded.</div>
 </div>
 
 <!-- ══════════════════════════════════════════════════
@@ -1025,6 +1159,7 @@
       <h2 id="stats-title">GAME STATS</h2>
       <div id="stats-header-btns">
         <button id="stats-export-btn">⬇ EXPORT CSV</button>
+        <button id="stats-xlsx-btn">⬇ EXCEL</button>
         <button id="stats-backup-btn">⬇ BACKUP</button>
         <button id="stats-close-btn">✕ CLOSE</button>
       </div>
@@ -2563,45 +2698,62 @@ function gameFileBase(rec) {
   return `goaltimate-${date}` + (slug ? `-${slug}` : '');
 }
 
-function buildCSV(rec) {
+// The post-game report, as named sections. CSV stacks them on one sheet; the Excel
+// export puts each on its own tab. Each section: { name (tab name), title, rows }.
+// The first row of every section is its header row.
+function buildReportSections(rec) {
   const g = rec.state;
   const secs = rec.timerSeconds || 0;
-  const rows = [];
-  // Summary block
   const t1 = g.teams.team1;
   const t2 = g.teams.team2;
   const pt = g.possessionTime || {};
-  rows.push(['SUMMARY']);
-  rows.push(['Game', g.gameName || '']);
-  rows.push(['Started', fmtDateTime(rec.startedAt)]);
-  rows.push(['Final Score', 'Team', 'Score', 'Possession']);
-  rows.push(['', t1.name, g.score.team1, fmtPT(pt.team1 || 0)]);
-  rows.push(['', t2.name, g.score.team2, fmtPT(pt.team2 || 0)]);
-  rows.push(['Game Time', fmtPT(secs)]);
-  rows.push([]);
-  rows.push(['Team','Name','Number','Touches','1pt Goals','2pt Goals','Total Pts','Assists','Turnovers','Ds','Possessions Won (on field)','Possessions Lost (on field)','+/-','Play Time']);
-  const teamsToExport = g.trackingMode === 'single' ? ['team1'] : ['team1', 'team2'];
-  teamsToExport.forEach(key => {
+  const teamKeys = g.trackingMode === 'single' ? ['team1'] : ['team1', 'team2'];
+  const sections = [];
+
+  sections.push({ name: 'Summary', title: 'SUMMARY', rows: [
+    ['Game', g.gameName || ''],
+    ['Started', fmtDateTime(rec.startedAt)],
+    ['Game Time', fmtPT(secs)],
+    [],
+    ['Team', 'Score', 'Possession'],
+    [t1.name, g.score.team1, fmtPT(pt.team1 || 0)],
+    [t2.name, g.score.team2, fmtPT(pt.team2 || 0)],
+  ], headerRow: 4 });
+
+  const statRows = [['Team','Name','Number','Touches','1pt Goals','2pt Goals','Total Pts','Assists','Turnovers','Ds','Possessions Won (on field)','Possessions Lost (on field)','+/-','Play Time']];
+  teamKeys.forEach(key => {
     const team = g.teams[key];
     if (!team) return;
     team.players.forEach(p => {
       const st = g.stats[p.id] || { goals1: 0, goals2: 0, assists: 0, ds: 0, turnovers: 0, touches: 0, pm: 0, teamStops: 0, teamDrops: 0 };
       const totalPts = st.goals1 + st.goals2 * 2;
       const ptime = (g.playTime || {})[p.id] || 0;
-      rows.push([
+      statRows.push([
         team.name || key, p.name, p.number || '',
         st.touches || 0, st.goals1, st.goals2, totalPts, st.assists || 0, st.turnovers, st.ds || 0, st.teamStops || 0, st.teamDrops || 0, st.pm || 0, fmtPT(ptime)
       ]);
     });
   });
-  passingRows(g, teamsToExport).forEach(r => rows.push(r));
-  // Event log block
-  rows.push([]);
-  rows.push(['Game Clock', 'Time of Day', 'Type', 'Event', 'Team']);
+  sections.push({ name: 'Player Stats', title: 'PLAYER STATS', rows: statRows });
+
+  passingSections(g, teamKeys).forEach(s => sections.push(s));
+
+  const logRows = [['Game Clock', 'Time of Day', 'Type', 'Event', 'Team']];
   (g.eventLog || []).forEach(e => {
     if (e.exportHide) return;
     const teamName = e.team && g.teams[e.team] ? g.teams[e.team].name : (e.team || '');
-    rows.push([fmtPT(e.t ?? 0), fmtClock(e.at), e.exportType || e.type, e.text, teamName]);
+    logRows.push([fmtPT(e.t ?? 0), fmtClock(e.at), e.exportType || e.type, e.text, teamName]);
+  });
+  sections.push({ name: 'Event Log', title: 'EVENT LOG', rows: logRows });
+  return sections;
+}
+
+function buildCSV(rec) {
+  const rows = [];
+  buildReportSections(rec).forEach((sec, i) => {
+    if (i > 0) rows.push([]);
+    rows.push([sec.title, ...(sec.note ? [sec.note] : [])]);
+    sec.rows.forEach(r => rows.push(r));
   });
   return rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
 }
@@ -2609,8 +2761,8 @@ function buildCSV(rec) {
 // Who threw to whom: a completed throw is a pass event with both a thrower (from) and a
 // receiver (pid). Turnovers end the chain; goals don't (the scorer keeps the disc).
 // Built from the event log, so undo already removes anything undone.
-function passingRows(g, teamKeys) {
-  const rows = [];
+function passingSections(g, teamKeys) {
+  const sections = [];
   const counts = {}; // from -> to -> n
   let any = false;
   (g.eventLog || []).forEach(e => {
@@ -2622,6 +2774,7 @@ function passingRows(g, teamKeys) {
   teamKeys.forEach(key => {
     const team = g.teams[key];
     if (!team) return;
+    const tname = team.name || key;
     const players = [...team.players];
     // Anyone removed in Edit Team keeps their throws in the record
     const known = new Set(players.map(p => p.id));
@@ -2631,42 +2784,146 @@ function passingRows(g, teamKeys) {
       });
     });
     const label = p => p.name + (p.number && String(p.number).trim() ? ` #${String(p.number).trim()}` : '');
-    rows.push([]);
-    rows.push([`PASSING GRID — ${team.name || key}`, 'Rows = thrower, columns = receiver, cells = completed throws']);
-    if (!any) { rows.push(['No passing data recorded for this game.']); return; }
-    rows.push(['Thrower ↓  Receiver →', ...players.map(label), 'Total Thrown']);
-    players.forEach(a => {
-      const line = players.map(b => (a.id === b.id ? '' : n(a.id, b.id)));
-      rows.push([label(a), ...line, line.reduce((s, v) => s + (v || 0), 0)]);
-    });
-    const recv = players.map(b => players.reduce((s, a) => s + n(a.id, b.id), 0));
-    rows.push(['Total Received', ...recv, recv.reduce((s, v) => s + v, 0)]);
 
-    rows.push([]);
-    rows.push([`PASSING BY PLAYER — ${team.name || key}`]);
-    rows.push(['Player', 'Touches', 'Direction', 'Teammate', 'Throws']);
-    players.forEach(a => {
+    const grid = [];
+    if (!any) grid.push(['No passing data recorded for this game.']);
+    else {
+      grid.push(['Thrower ↓  Receiver →', ...players.map(label), 'Total Thrown']);
+      players.forEach(a => {
+        const line = players.map(b => (a.id === b.id ? '' : n(a.id, b.id)));
+        grid.push([label(a), ...line, line.reduce((s, v) => s + (v || 0), 0)]);
+      });
+      const recv = players.map(b => players.reduce((s, a) => s + n(a.id, b.id), 0));
+      grid.push(['Total Received', ...recv, recv.reduce((s, v) => s + v, 0)]);
+    }
+    sections.push({ name: `${tname} Pass Grid`, title: `PASSING GRID — ${tname}`,
+      note: 'Rows = thrower, columns = receiver, cells = completed throws', rows: grid, totalsCol: true });
+
+    const list = [['Player', 'Touches', 'Direction', 'Teammate', 'Throws']];
+    if (any) players.forEach(a => {
       const st = g.stats[a.id] || {};
       const mates = players.filter(b => b.id !== a.id);
       const byCount = f => [...mates].sort((x, y) => f(y) - f(x));
       byCount(b => n(a.id, b.id)).forEach((b, i) =>
-        rows.push([i === 0 ? label(a) : '', i === 0 ? (st.touches || 0) : '', 'Threw to', label(b), n(a.id, b.id)]));
+        list.push([i === 0 ? label(a) : '', i === 0 ? (st.touches || 0) : '', 'Threw to', label(b), n(a.id, b.id)]));
       byCount(b => n(b.id, a.id)).forEach(b =>
-        rows.push(['', '', 'Received from', label(b), n(b.id, a.id)]));
+        list.push(['', '', 'Received from', label(b), n(b.id, a.id)]));
     });
+    sections.push({ name: `${tname} Pass List`, title: `PASSING BY PLAYER — ${tname}`, rows: list });
   });
-  return rows;
+  return sections;
+}
+
+// ============================================================
+// EXCEL (.xlsx) EXPORT — written here, no library, so it works offline
+// ============================================================
+// An .xlsx file is a zip of a few XML files. We store them uncompressed, which every
+// spreadsheet app accepts; the files are small either way.
+function buildXLSX(rec) {
+  const sections = buildReportSections(rec);
+  const esc = v => String(v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '');
+  const colName = i => { let s = ''; i++; while (i) { const m = (i - 1) % 26; s = String.fromCharCode(65 + m) + s; i = Math.floor((i - 1) / 26); } return s; };
+  // Tab names: max 31 chars, none of : \ / ? * [ ], unique
+  const used = new Set();
+  const tabName = raw => {
+    let base = String(raw).replace(/[:\\\/?*\[\]]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 31) || 'Sheet';
+    let name = base, k = 2;
+    while (used.has(name.toLowerCase())) { const sfx = ` (${k++})`; name = base.slice(0, 31 - sfx.length) + sfx; }
+    used.add(name.toLowerCase());
+    return name;
+  };
+  const sheets = sections.map(sec => {
+    const headerRow = sec.headerRow || 0;
+    const widths = [];
+    const rowsXml = sec.rows.map((r, ri) => {
+      const bold = ri === headerRow;
+      const cells = r.map((v, ci) => {
+        if (v === '' || v === null || v === undefined) return '';
+        widths[ci] = Math.max(widths[ci] || 0, String(v).length);
+        const ref = colName(ci) + (ri + 1);
+        const firstCol = ci === 0 && sec.totalsCol; // grid row labels
+        const style = (bold || firstCol) ? ' s="1"' : '';
+        if (typeof v === 'number' && isFinite(v)) return `<c r="${ref}"${style}><v>${v}</v></c>`;
+        return `<c r="${ref}" t="inlineStr"${style}><is><t xml:space="preserve">${esc(v)}</t></is></c>`;
+      }).join('');
+      return `<row r="${ri + 1}">${cells}</row>`;
+    }).join('');
+    const cols = widths.length
+      ? '<cols>' + widths.map((w, i) => `<col min="${i + 1}" max="${i + 1}" width="${Math.min(40, Math.max(8, (w || 0) + 2))}" customWidth="1"/>`).join('') + '</cols>'
+      : '';
+    const freeze = headerRow === 0 && sec.rows.length > 1
+      ? `<sheetViews><sheetView workbookViewId="0"><pane ${sec.totalsCol ? 'xSplit="1" ' : ''}ySplit="1" topLeftCell="${sec.totalsCol ? 'B2' : 'A2'}" activePane="${sec.totalsCol ? 'bottomRight' : 'bottomLeft'}" state="frozen"/></sheetView></sheetViews>`
+      : '';
+    return { name: tabName(sec.name),
+      xml: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">${freeze}${cols}<sheetData>${rowsXml}</sheetData></worksheet>` };
+  });
+
+  const files = [
+    ['[Content_Types].xml', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>${sheets.map((s, i) => `<Override PartName="/xl/worksheets/sheet${i + 1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`).join('')}</Types>`],
+    ['_rels/.rels', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>`],
+    ['xl/workbook.xml', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>${sheets.map((s, i) => `<sheet name="${esc(s.name)}" sheetId="${i + 1}" r:id="rId${i + 1}"/>`).join('')}</sheets></workbook>`],
+    ['xl/_rels/workbook.xml.rels', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${sheets.map((s, i) => `<Relationship Id="rId${i + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${i + 1}.xml"/>`).join('')}<Relationship Id="rId${sheets.length + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>`],
+    ['xl/styles.xml', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts><fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="2"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>`],
+    ...sheets.map((s, i) => [`xl/worksheets/sheet${i + 1}.xml`, s.xml]),
+  ];
+  return zipStore(files);
+}
+
+// Minimal zip writer (no compression)
+const CRC_TABLE = (() => {
+  const t = new Uint32Array(256);
+  for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; }
+  return t;
+})();
+function crc32(bytes) {
+  let c = 0xFFFFFFFF;
+  for (let i = 0; i < bytes.length; i++) c = CRC_TABLE[(c ^ bytes[i]) & 0xFF] ^ (c >>> 8);
+  return (c ^ 0xFFFFFFFF) >>> 0;
+}
+function zipStore(files) {
+  const enc = new TextEncoder();
+  const parts = [], central = [];
+  let offset = 0;
+  const d = new Date();
+  const dosTime = (d.getHours() << 11) | (d.getMinutes() << 5) | (d.getSeconds() >> 1);
+  const dosDate = ((d.getFullYear() - 1980) << 9) | ((d.getMonth() + 1) << 5) | d.getDate();
+  files.forEach(([name, text]) => {
+    const nameB = enc.encode(name), data = enc.encode(text), crc = crc32(data);
+    const lh = new DataView(new ArrayBuffer(30));
+    lh.setUint32(0, 0x04034b50, true); lh.setUint16(4, 20, true); lh.setUint16(6, 0x0800, true); lh.setUint16(8, 0, true);
+    lh.setUint16(10, dosTime, true); lh.setUint16(12, dosDate, true); lh.setUint32(14, crc, true);
+    lh.setUint32(18, data.length, true); lh.setUint32(22, data.length, true); lh.setUint16(26, nameB.length, true); lh.setUint16(28, 0, true);
+    parts.push(new Uint8Array(lh.buffer), nameB, data);
+    const ch = new DataView(new ArrayBuffer(46));
+    ch.setUint32(0, 0x02014b50, true); ch.setUint16(4, 20, true); ch.setUint16(6, 20, true); ch.setUint16(8, 0x0800, true); ch.setUint16(10, 0, true);
+    ch.setUint16(12, dosTime, true); ch.setUint16(14, dosDate, true); ch.setUint32(16, crc, true);
+    ch.setUint32(20, data.length, true); ch.setUint32(24, data.length, true); ch.setUint16(28, nameB.length, true);
+    ch.setUint16(30, 0, true); ch.setUint16(32, 0, true); ch.setUint16(34, 0, true); ch.setUint16(36, 0, true);
+    ch.setUint32(38, 0, true); ch.setUint32(42, offset, true);
+    central.push(new Uint8Array(ch.buffer), nameB);
+    offset += 30 + nameB.length + data.length;
+  });
+  const cdSize = central.reduce((s, b) => s + b.length, 0);
+  const end = new DataView(new ArrayBuffer(22));
+  end.setUint32(0, 0x06054b50, true); end.setUint16(8, files.length, true); end.setUint16(10, files.length, true);
+  end.setUint32(12, cdSize, true); end.setUint32(16, offset, true);
+  const all = [...parts, ...central, new Uint8Array(end.buffer)];
+  const out = new Uint8Array(all.reduce((s, b) => s + b.length, 0));
+  let p = 0; all.forEach(b => { out.set(b, p); p += b.length; });
+  return out;
 }
 
 // Hand a file to the user. Resolves to 'shared' | 'downloaded' | 'copied' | 'cancelled' | 'failed'.
 // Must be called straight from a tap (no awaiting first) so iOS allows the share sheet.
 function deliverFile(content, filename, mime) {
+  const binary = typeof content !== 'string'; // a binary file can't fall back to copy/paste
   const file = new File([content], filename, { type: mime });
   // iOS home-screen apps ignore <a download>, so prefer the share sheet (Save to Files, AirDrop, Mail…)
   if (navigator.canShare && navigator.canShare({ files: [file] })) {
     return navigator.share({ files: [file], title: filename })
       .then(() => 'shared')
-      .catch(err => (err && err.name === 'AbortError') ? 'cancelled' : copyFallback(content));
+      .catch(err => (err && err.name === 'AbortError') ? 'cancelled' : (binary ? 'failed' : copyFallback(content)));
   }
   try {
     const url = URL.createObjectURL(file);
@@ -2679,7 +2936,7 @@ function deliverFile(content, filename, mime) {
     setTimeout(() => URL.revokeObjectURL(url), 10000);
     return Promise.resolve('downloaded');
   } catch (e) {
-    return copyFallback(content);
+    return binary ? Promise.resolve('failed') : copyFallback(content);
   }
 }
 
@@ -2706,12 +2963,20 @@ function reportExport(result, filename) {
   }
 }
 
-// format: 'csv' (spreadsheet) or 'json' (complete, lossless backup of everything recorded)
+// format: 'csv' (one sheet), 'xlsx' (Excel, a tab per section) or 'json' (complete, lossless backup)
+const EXPORT_TYPES = {
+  csv:  { ext: '.csv',  mime: 'text/csv', build: buildCSV },
+  xlsx: { ext: '.xlsx', mime: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', build: buildXLSX },
+  json: { ext: '.json', mime: 'application/json',
+          build: rec => JSON.stringify({ app: 'goaltimate-stats', format: 1, games: [rec], photos: photosForRecords([rec]) }, null, 2) },
+};
 function exportGame(rec, format) {
-  const isCSV = format === 'csv';
-  const filename = gameFileBase(rec) + (isCSV ? '.csv' : '.json');
-  const content = isCSV ? buildCSV(rec) : JSON.stringify({ app: 'goaltimate-stats', format: 1, games: [rec], photos: photosForRecords([rec]) }, null, 2);
-  return deliverFile(content, filename, isCSV ? 'text/csv' : 'application/json').then(result => {
+  const type = EXPORT_TYPES[format];
+  const filename = gameFileBase(rec) + type.ext;
+  let content;
+  try { content = type.build(rec); }
+  catch (e) { reportExport('failed', filename); return Promise.resolve('failed'); }
+  return deliverFile(content, filename, type.mime).then(result => {
     if (result === 'shared' || result === 'downloaded') markExported([rec]);
     reportExport(result, filename);
     return result;
@@ -2849,6 +3114,7 @@ function renderPastGames() {
     };
     mk('STATS', '', () => showStats(rec));
     mk('CSV', '', () => exportGame(rec, 'csv'));
+    mk('EXCEL', '', () => exportGame(rec, 'xlsx'));
     mk('BACKUP', '', () => exportGame(rec, 'json'));
     mk('✕', 'del', async () => {
       if (live) { appAlert('This game is still in progress. Resume it from the home screen, or start a new game first.'); return; }
@@ -2896,8 +3162,11 @@ document.getElementById('stats-close-btn').addEventListener('click', () => {
   document.getElementById('stats-modal').style.display = 'none';
 });
 document.getElementById('stats-export-btn').addEventListener('click', () => { if (statsRecord) exportGame(statsRecord, 'csv'); });
+document.getElementById('stats-xlsx-btn').addEventListener('click', () => { if (statsRecord) exportGame(statsRecord, 'xlsx'); });
 document.getElementById('stats-backup-btn').addEventListener('click', () => { if (statsRecord) exportGame(statsRecord, 'json'); });
 document.getElementById('games-btn').addEventListener('click', openPastGames);
+document.getElementById('help-btn').addEventListener('click', () => { document.getElementById('help-body').scrollTop = 0; showScreen('help-screen'); });
+document.getElementById('help-back-btn').addEventListener('click', () => showScreen('home-screen'));
 document.getElementById('games-back-btn').addEventListener('click', () => { initHome(); showScreen('home-screen'); });
 document.getElementById('games-backup-all-btn').addEventListener('click', () => {
   if (!pastGames.length) { showToast('No games to back up yet.', 'warn'); return; }
