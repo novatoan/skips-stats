@@ -779,6 +779,9 @@
     .photo-sheet-btn.danger  { color: #e57373; border-color: rgba(229,115,115,0.4); background: transparent; }
     .photo-sheet-btn.cancel  { background: transparent; border-color: transparent; color: rgba(255,255,255,0.6); }
     .photo-sheet-btn:active { opacity: 0.7; }
+    #app-dialog { z-index: 500; }
+    #app-dialog-box { max-width: 380px; display: flex; flex-direction: column; gap: 10px; }
+    #app-dialog-msg { font-size: 1em; line-height: 1.4; text-align: center; margin: 4px 0 8px; white-space: pre-line; }
   </style>
 </head>
 <body>
@@ -974,6 +977,15 @@
     <button class="photo-sheet-btn cancel" id="photo-cancel-btn">CANCEL</button>
     <input type="file" accept="image/*" capture="environment" id="photo-camera-input" hidden>
     <input type="file" accept="image/*" id="photo-library-input" hidden>
+  </div>
+</div>
+
+<!-- APP DIALOG — in-app replacement for alert()/confirm(), which some browsers block -->
+<div class="overlay" id="app-dialog" style="display:none">
+  <div class="modal" id="app-dialog-box" role="alertdialog" aria-modal="true" aria-labelledby="app-dialog-msg">
+    <p id="app-dialog-msg"></p>
+    <button class="photo-sheet-btn primary" id="app-dialog-ok">OK</button>
+    <button class="photo-sheet-btn cancel" id="app-dialog-cancel">CANCEL</button>
   </div>
 </div>
 
@@ -1341,13 +1353,12 @@ function saveCurrentAsRoster(teamKey) {
   const s = state.setup[teamKey];
   const name = s.name.trim();
   if (!name) {
-    alert('Enter a team name before saving a roster.');
-    document.getElementById(`name-${teamKey}`).focus();
+    appAlert('Enter a team name before saving a roster.').then(() => document.getElementById(`name-${teamKey}`).focus());
     return;
   }
   const players = s.players.filter(p => p.name.trim());
   if (players.length === 0) {
-    alert('Add at least one player before saving a roster.');
+    appAlert('Add at least one player before saving a roster.');
     return;
   }
   const rosters = loadRosters();
@@ -1437,11 +1448,11 @@ if (window.visualViewport) {
   window.visualViewport.addEventListener('scroll', keepSetupRowVisible);
 }
 
-function validateAndStartGame() {
+async function validateAndStartGame() {
   for (const key of ['team1', 'team2']) {
     const name = state.setup[key].name.trim();
     if (!name) {
-      alert(`Please enter a name for ${key === 'team1' ? 'Team 1' : 'Team 2'}.`);
+      await appAlert(`Please enter a name for ${key === 'team1' ? 'Team 1' : 'Team 2'}.`);
       document.getElementById(`name-${key}`).focus();
       return;
     }
@@ -1452,11 +1463,11 @@ function validateAndStartGame() {
     const named = state.setup[key].players.filter(p => p.name.trim());
     const teamName = state.setup[key].name.trim();
     if (named.length === 0) {
-      alert(`${teamName} has no players. Add at least one.`);
+      appAlert(`${teamName} has no players. Add at least one.`);
       return;
     }
     if (named.length < 4) {
-      const ok = confirm(`${teamName} only has ${named.length} player${named.length > 1 ? 's' : ''}. You need 4 to fill the field. Start anyway?`);
+      const ok = await appConfirm(`${teamName} only has ${named.length} player${named.length > 1 ? 's' : ''}. You need 4 to fill the field. Start anyway?`, 'START ANYWAY');
       if (!ok) return;
     }
   }
@@ -2417,8 +2428,8 @@ function endGame() {
   document.getElementById('confirm-end-modal').style.display = 'flex';
 }
 
-function returnToSetup() {
-  const confirmed = window.confirm('Leave this game and go back to setup? It stays saved in Past Games.');
+async function returnToSetup() {
+  const confirmed = await appConfirm('Leave this game and go back to setup? It stays saved in Past Games.', 'GO TO SETUP');
   if (!confirmed) return;
   flushArchive();
   document.getElementById('confirm-end-modal').style.display = 'none';
@@ -2678,6 +2689,29 @@ function markExported(records) {
 }
 
 let toastTimer = null;
+// In-app alert/confirm. Native alert()/confirm() can be silently blocked (embedded
+// browsers, and iOS after repeated dialogs), which made buttons appear to do nothing.
+function appDialog(msg, { okLabel = 'OK', cancelLabel = null, danger = false } = {}) {
+  return new Promise(resolve => {
+    const box = document.getElementById('app-dialog');
+    const ok = document.getElementById('app-dialog-ok');
+    const cancel = document.getElementById('app-dialog-cancel');
+    document.getElementById('app-dialog-msg').textContent = msg;
+    ok.textContent = okLabel;
+    ok.className = 'photo-sheet-btn ' + (danger ? 'danger' : 'primary');
+    cancel.textContent = cancelLabel || 'CANCEL';
+    cancel.style.display = cancelLabel ? '' : 'none';
+    const done = result => { box.style.display = 'none'; ok.onclick = cancel.onclick = null; resolve(result); };
+    ok.onclick = () => done(true);
+    cancel.onclick = () => done(false);
+    box.style.display = 'flex';
+  });
+}
+function appAlert(msg) { return appDialog(msg); }
+function appConfirm(msg, okLabel = 'OK', danger = false) {
+  return appDialog(msg, { okLabel, cancelLabel: 'CANCEL', danger });
+}
+
 function showToast(msg, kind) {
   const t = document.getElementById('toast');
   t.textContent = msg;
@@ -2756,10 +2790,10 @@ function renderPastGames() {
     mk('STATS', '', () => showStats(rec));
     mk('CSV', '', () => exportGame(rec, 'csv'));
     mk('BACKUP', '', () => exportGame(rec, 'json'));
-    mk('✕', 'del', () => {
-      if (live) { alert('This game is still in progress. Resume it from the home screen, or start a new game first.'); return; }
+    mk('✕', 'del', async () => {
+      if (live) { appAlert('This game is still in progress. Resume it from the home screen, or start a new game first.'); return; }
       const warn = status.text === 'Exported ✓' ? '' : '\n\nThis game has NOT been exported.';
-      if (!confirm(`Delete "${rec.gameName || 'Untitled game'}" permanently? This can’t be undone.${warn}`)) return;
+      if (!(await appConfirm(`Delete "${rec.gameName || 'Untitled game'}" permanently? This can’t be undone.${warn}`, 'DELETE', true))) return;
       deleteGameRecord(rec.id).then(() => {
         pastGames = pastGames.filter(r => r.id !== rec.id);
         renderPastGames();
