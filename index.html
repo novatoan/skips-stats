@@ -1347,49 +1347,58 @@ function renderSwatches(key) {
 
 function renderSetupPlayers(key) {
   const list = document.getElementById(`list-${key}`);
+  const panel = list.closest('.setup-panel');
+  const keepScroll = panel ? panel.scrollTop : 0; // a rebuild must not make the panel jump
   list.innerHTML = '';
-  state.setup[key].players.forEach((p, i) => {
-    const row = document.createElement('div');
-    row.className = 'player-row';
+  const players = state.setup[key].players;
+  players.forEach((p, i) => list.appendChild(makeSetupRow(key, i, i === players.length - 1)));
+  if (panel) panel.scrollTop = keepScroll;
+}
 
-    const numInp = document.createElement('input');
-    numInp.type = 'text'; numInp.className = 'num-input';
-    numInp.value = p.number; numInp.placeholder = '#'; numInp.maxLength = 3;
-    numInp.addEventListener('input', e => { state.setup[key].players[i].number = e.target.value; });
+function makeSetupAddBtn(key) {
+  const addBtn = document.createElement('button');
+  addBtn.className = 'row-add-btn'; addBtn.textContent = '+';
+  addBtn.title = 'Add player';
+  addBtn.addEventListener('click', () => addSetupPlayer(key));
+  return addBtn;
+}
 
-    const nameInp = document.createElement('input');
-    nameInp.type = 'text'; nameInp.className = 'setup-name-input';
-    nameInp.value = p.name; nameInp.placeholder = 'Player name';
-    nameInp.addEventListener('input', e => { state.setup[key].players[i].name = e.target.value; });
-    // Enter on name field → commit and open next row
-    nameInp.addEventListener('keydown', e => {
-      if (e.key === 'Enter') { e.preventDefault(); addSetupPlayer(key); }
-    });
-    // Enter on number field → jump to name field
-    numInp.addEventListener('keydown', e => {
-      if (e.key === 'Enter') { e.preventDefault(); nameInp.focus(); }
-    });
+function makeSetupRow(key, i, isLast) {
+  const p = state.setup[key].players[i];
+  const row = document.createElement('div');
+  row.className = 'player-row';
 
-    const delBtn = document.createElement('button');
-    delBtn.className = 'row-del-btn'; delBtn.textContent = '✕';
-    delBtn.addEventListener('click', () => {
-      state.setup[key].players.splice(i, 1);
-      renderSetupPlayers(key);
-    });
+  const numInp = document.createElement('input');
+  numInp.type = 'text'; numInp.className = 'num-input';
+  numInp.value = p.number; numInp.placeholder = '#'; numInp.maxLength = 3;
+  numInp.addEventListener('input', e => { state.setup[key].players[i].number = e.target.value; });
 
-    row.appendChild(makePhotoButton(p, () => state.setup[key].players[i].name, () => renderSetupPlayers(key)));
-    row.appendChild(numInp); row.appendChild(nameInp);
-    // Inline + button only on last row
-    if (i === state.setup[key].players.length - 1) {
-      const addBtn = document.createElement('button');
-      addBtn.className = 'row-add-btn'; addBtn.textContent = '+';
-      addBtn.title = 'Add player';
-      addBtn.addEventListener('click', () => addSetupPlayer(key));
-      row.appendChild(addBtn);
-    }
-    row.appendChild(delBtn);
-    list.appendChild(row);
+  const nameInp = document.createElement('input');
+  nameInp.type = 'text'; nameInp.className = 'setup-name-input';
+  nameInp.value = p.name; nameInp.placeholder = 'Player name';
+  nameInp.addEventListener('input', e => { state.setup[key].players[i].name = e.target.value; });
+  // Enter on name field → commit and open next row
+  nameInp.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); addSetupPlayer(key); }
   });
+  // Enter on number field → jump to name field
+  numInp.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); nameInp.focus(); }
+  });
+
+  const delBtn = document.createElement('button');
+  delBtn.className = 'row-del-btn'; delBtn.textContent = '✕';
+  delBtn.addEventListener('click', () => {
+    state.setup[key].players.splice(i, 1);
+    renderSetupPlayers(key);
+  });
+
+  row.appendChild(makePhotoButton(p, () => state.setup[key].players[i].name, () => renderSetupPlayers(key)));
+  row.appendChild(numInp); row.appendChild(nameInp);
+  // Inline + button only on last row
+  if (isLast) row.appendChild(makeSetupAddBtn(key));
+  row.appendChild(delBtn);
+  return row;
 }
 
 // ============================================================
@@ -1526,13 +1535,20 @@ function deleteRoster(id) {
   saveRosters(loadRosters().filter(r => r.id !== id));
 }
 
+// Adds one row without rebuilding the list. Rebuilding emptied the list for a moment,
+// which snapped the panel to the top and dropped the keyboard before scrolling back
+// down — the "duck" on every new player. Focus moves synchronously, inside the tap or
+// key press, so iOS keeps the keyboard up; keepSetupRowVisible does the only scroll.
 function addSetupPlayer(key) {
-  state.setup[key].players.push({ number: '', name: '' });
-  renderSetupPlayers(key);
-  setTimeout(() => {
-    const inputs = document.querySelectorAll(`#list-${key} .setup-name-input`);
-    if (inputs.length) inputs[inputs.length - 1].focus();
-  }, 30);
+  const players = state.setup[key].players;
+  players.push({ number: '', name: '' });
+  const list = document.getElementById(`list-${key}`);
+  const oldAdd = list.querySelector('.row-add-btn');
+  if (oldAdd) oldAdd.remove();
+  const row = makeSetupRow(key, players.length - 1, true);
+  list.appendChild(row);
+  row.querySelector('.setup-name-input').focus({ preventScroll: true });
+  scheduleKeepSetupRowVisible();
 }
 
 // ── Keep the player row being typed in visible above the on-screen keyboard ──
