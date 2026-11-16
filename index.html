@@ -915,6 +915,7 @@
         <li><b>GOAL</b> (or <b>2 PT GOAL</b>): the player holding the disc scores, and the player who threw it to them gets the assist.
           The scorer's team keeps the disc.</li>
         <li><b>TURN</b>: pick what happened — Throwaway, Drop, Stall or D. The disc goes to the other team.</li>
+        <li>For a <b>drop</b>, tap the player who dropped it first, then <b>TURN → Drop</b>. The drop is charged to them.</li>
         <li>After a <b>D</b>, the app asks <b>WHO GOT THE D?</b> — tap that defender.</li>
         <li>Made a mistake? <b>UNDO</b> takes back the last thing you did. Tap it again to go further back (up to 40 steps).</li>
       </ul>
@@ -947,7 +948,7 @@
       <dl>
         <dt>TCH</dt><dd>Touches — times the player had the disc</dd>
         <dt>AST</dt><dd>Assists — threw the pass that scored</dd>
-        <dt>TO</dt><dd>Turnovers — charged to the last player who had the disc</dd>
+        <dt>TO</dt><dd>Turnovers — the thrower on a throwaway or stall, the receiver on a drop</dd>
         <dt>D</dt><dd>Defensive block that won the disc back</dd>
         <dt>POSS WON</dt><dd>Times the other team lost the disc while this player was on the field</dd>
         <dt>POSS LOST</dt><dd>Times this player's team lost the disc while they were on the field</dd>
@@ -1991,8 +1992,19 @@ function onTurnover(type) {
   if (!state.activeTeam) return; // possession not yet assigned
   pushHistory();
   const td = getTeamData();
-  // All turnover types credit the disc holder
+  // All turnover types credit the disc holder (for a drop that's the receiver, tapped just before)
   if (td.discHolder) getPlayerStat(td.discHolder).turnovers++;
+  // A dropped pass isn't a completed throw: flag the pass that reached the dropper.
+  // Replace the entry rather than editing it, so the undo snapshot keeps the original.
+  if (type === 'drop' && td.discHolder) {
+    for (let i = state.eventLog.length - 1; i >= 0; i--) {
+      const e = state.eventLog[i];
+      if (e.type === 'pass' && e.team === state.activeTeam) {
+        if (e.pid === td.discHolder) state.eventLog[i] = { ...e, dropped: true };
+        break;
+      }
+    }
+  }
   // Team Drop: everyone on the line that lost the disc. Team Stop: everyone on the defending line.
   const defKey = state.activeTeam === 'team1' ? 'team2' : 'team1';
   td.field.forEach(pid => { if (pid) getPlayerStat(pid).teamDrops = (getPlayerStat(pid).teamDrops || 0) + 1; });
@@ -2766,7 +2778,7 @@ function passingSections(g, teamKeys) {
   const counts = {}; // from -> to -> n
   let any = false;
   (g.eventLog || []).forEach(e => {
-    if (e.type !== 'pass' || !e.from || !e.pid) return;
+    if (e.type !== 'pass' || !e.from || !e.pid || e.dropped) return;
     any = true;
     (counts[e.from] = counts[e.from] || {})[e.pid] = (counts[e.from][e.pid] || 0) + 1;
   });
@@ -2797,7 +2809,7 @@ function passingSections(g, teamKeys) {
       grid.push(['Total Received', ...recv, recv.reduce((s, v) => s + v, 0)]);
     }
     sections.push({ name: `${tname} Pass Grid`, title: `PASSING GRID — ${tname}`,
-      note: 'Rows = thrower, columns = receiver, cells = completed throws', rows: grid, totalsCol: true });
+      note: 'Rows = thrower, columns = receiver, cells = completed throws (drops not counted)', rows: grid, totalsCol: true });
 
     const list = [['Player', 'Touches', 'Direction', 'Teammate', 'Throws']];
     if (any) players.forEach(a => {
