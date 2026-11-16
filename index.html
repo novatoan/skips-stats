@@ -683,7 +683,8 @@
     #panel-team2.single-collapsed .roster-actions-row { display: none; }
 
     /* ── HOW TO USE ─────────────────────────────────── */
-    #help-btn { margin-top: 12px; }
+    #help-btn { position: absolute; left: 50%; transform: translateX(-50%); bottom: max(28px, env(safe-area-inset-bottom)); white-space: nowrap; }
+    #help-btn:active { transform: translateX(-50%) scale(0.97); }
     #help-screen { flex-direction: column; background: #0f0f0f; }
     #help-header {
       display: flex; align-items: center; justify-content: space-between;
@@ -864,7 +865,7 @@
   <button id="new-game-btn" class="home-btn primary">NEW GAME</button>
   <button id="resume-btn"   class="home-btn secondary" style="display:none">RESUME GAME</button>
   <button id="games-btn"    class="home-btn secondary">PAST GAMES</button>
-  <button id="help-btn"     class="home-btn secondary">❔ HOW TO USE THIS APP</button>
+  <button id="help-btn"     class="home-btn secondary">HOW TO USE THIS APP</button>
 </div>
 
 <!-- ══════════════════════════════════════════════════
