@@ -209,14 +209,19 @@
     .row-add-btn:active { background: #145214; }
 
     .add-btn {
-      background: var(--panel-color); color: var(--panel-text);
-      border: none; border-radius: 6px;
+      color: var(--panel-text);
+      border: 1.5px solid var(--panel-sub); border-radius: 6px;
+      background: rgba(255,255,255,0.08);
+      background: color-mix(in srgb, var(--panel-text) 8%, transparent);
       padding: 9px 0; font-family: inherit;
       font-size: 0.78em; font-weight: 900; letter-spacing: 1px;
       cursor: pointer; margin-top: 10px; width: 100%;
-      transition: opacity 0.1s;
+      transition: background 0.15s;
     }
-    .add-btn:active { opacity: 0.7; }
+    .add-btn:active {
+      background: rgba(255,255,255,0.18);
+      background: color-mix(in srgb, var(--panel-text) 18%, transparent);
+    }
 
     /* ── GAME SCREEN ────────────────────────────────── */
     #game-screen { flex-direction: column; }
