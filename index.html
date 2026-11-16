@@ -209,7 +209,7 @@
     .row-add-btn:active { background: #145214; }
 
     .add-btn {
-      background: var(--panel-color); color: #fff;
+      background: var(--panel-color); color: var(--panel-text);
       border: none; border-radius: 6px;
       padding: 9px 0; font-family: inherit;
       font-size: 0.78em; font-weight: 900; letter-spacing: 1px;
@@ -677,10 +677,14 @@
       flex: 1; font-family: inherit; font-size: 0.7em; font-weight: 700;
       letter-spacing: 1px; text-transform: uppercase;
       padding: 7px 10px; border-radius: 6px; cursor: pointer;
-      border: 1.5px solid rgba(255,255,255,0.3); color: rgba(255,255,255,0.8);
+      border: 1.5px solid var(--panel-sub); color: var(--panel-text);
       background: rgba(255,255,255,0.08); transition: background 0.15s;
+      background: color-mix(in srgb, var(--panel-text) 8%, transparent);
     }
-    .load-roster-btn:active, .save-roster-btn:active { background: rgba(255,255,255,0.18); }
+    .load-roster-btn:active, .save-roster-btn:active {
+      background: rgba(255,255,255,0.18);
+      background: color-mix(in srgb, var(--panel-text) 18%, transparent);
+    }
 
     /* ── ROSTER MODAL ───────────────────────────────── */
     #roster-modal-box { max-height: 70vh; display: flex; flex-direction: column; }
