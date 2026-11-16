@@ -765,6 +765,75 @@
     #panel-team2.single-collapsed .player-list,
     #panel-team2.single-collapsed .add-btn,
     #panel-team2.single-collapsed .roster-actions-row { display: none; }
+
+    /* ── PAST GAMES ─────────────────────────────────── */
+    #games-screen { flex-direction: column; background: #0f0f0f; }
+    #games-header {
+      display: flex; align-items: center; justify-content: space-between;
+      background: #111; border-bottom: 1px solid #222;
+      padding: 10px 16px; flex-shrink: 0; gap: 12px;
+    }
+    #games-header h2 {
+      color: #fff; font-size: clamp(0.9em, 2.2vw, 1.3em);
+      font-weight: 900; letter-spacing: 4px; flex: 1; text-align: center;
+    }
+    #games-back-btn { background: #2a2a2a; }
+    #games-backup-all-btn { background: #1a6b1a; }
+    #games-list { flex: 1; overflow-y: auto; padding: 12px 16px; }
+    .games-empty { color: rgba(255,255,255,0.5); text-align: center; padding: 48px 16px; line-height: 1.6; font-size: 0.9em; }
+    .game-row {
+      display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+      padding: 12px 14px; margin-bottom: 10px;
+      background: #181818; border: 1px solid #2a2a2a; border-radius: 8px;
+    }
+    .game-info { flex: 1; min-width: 220px; }
+    .game-name { color: #fff; font-weight: 900; letter-spacing: 1px; font-size: 1em; }
+    .game-meta { color: rgba(255,255,255,0.55); font-family: Arial, sans-serif; font-size: 0.8em; margin-top: 4px; }
+    .game-badges { display: flex; gap: 6px; margin-top: 6px; }
+    .game-badge {
+      font-size: 0.65em; font-weight: 900; letter-spacing: 1px; text-transform: uppercase;
+      padding: 3px 8px; border-radius: 10px;
+    }
+    .game-badge.ok   { background: rgba(76,175,80,0.18); color: #81C784; }
+    .game-badge.warn { background: rgba(255,152,0,0.2);  color: #FFB74D; }
+    .game-badge.live { background: rgba(33,150,243,0.2); color: #64B5F6; }
+    .game-actions { display: flex; gap: 8px; }
+    .game-act {
+      font-family: inherit; font-size: 0.72em; font-weight: 900; letter-spacing: 1px;
+      padding: 9px 12px; border-radius: 6px; cursor: pointer;
+      border: 1.5px solid rgba(255,255,255,0.3); color: #fff; background: rgba(255,255,255,0.08);
+    }
+    .game-act:active { background: rgba(255,255,255,0.18); }
+    .game-act.del { color: #e57373; border-color: rgba(229,115,115,0.4); }
+    #games-footnote {
+      flex-shrink: 0; padding: 10px 16px 14px; text-align: center;
+      color: rgba(255,255,255,0.4); font-family: Arial, sans-serif; font-size: 0.75em; line-height: 1.5;
+    }
+    #games-btn { margin-top: 12px; }
+    #stats-backup-btn {
+      background: transparent; color: #fff; border: 1.5px solid rgba(255,255,255,0.35); border-radius: 6px;
+      padding: 8px 14px; font-family: inherit; font-size: 0.78em;
+      font-weight: 900; letter-spacing: 1px; cursor: pointer;
+    }
+
+    /* ── SAVE WARNING + TOAST ───────────────────────── */
+    #save-warning {
+      display: none; position: fixed; top: 0; left: 0; right: 0; z-index: 10000;
+      background: #b71c1c; color: #fff; text-align: center;
+      padding: 10px 16px; font-size: 0.85em; font-weight: 900; letter-spacing: 0.5px;
+    }
+    #toast {
+      position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 20px);
+      max-width: min(560px, calc(100% - 32px)); z-index: 10001;
+      padding: 12px 18px; border-radius: 8px; color: #fff;
+      font-family: Arial, sans-serif; font-weight: 700; font-size: 0.9em; line-height: 1.4; text-align: center;
+      box-shadow: 0 6px 24px rgba(0,0,0,0.5);
+      opacity: 0; pointer-events: none; transition: opacity 0.2s, transform 0.2s;
+    }
+    #toast.show { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
+    #toast.ok    { background: #1B5E20; }
+    #toast.warn  { background: #E65100; }
+    #toast.error { background: #B71C1C; }
   </style>
 </head>
 <body>
@@ -798,6 +867,21 @@
   <h1 class="app-title">GOALTIMATE<span class="app-subtitle">STATS</span></h1>
   <button id="new-game-btn" class="home-btn primary">NEW GAME</button>
   <button id="resume-btn"   class="home-btn secondary" style="display:none">RESUME GAME</button>
+  <button id="games-btn"    class="home-btn secondary">PAST GAMES</button>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     PAST GAMES SCREEN — every game is kept here until you delete it
+══════════════════════════════════════════════════ -->
+<div id="games-screen" class="screen">
+  <div id="games-header">
+    <button class="setup-nav-btn" id="games-back-btn">← BACK</button>
+    <h2>PAST GAMES</h2>
+    <button class="setup-nav-btn" id="games-backup-all-btn">⬇ BACKUP ALL</button>
+  </div>
+  <div id="games-list"></div>
+  <div id="games-footnote">Games are saved automatically as you play and stay on this device until you delete them.
+    CSV opens in a spreadsheet. BACKUP is a complete copy of everything recorded.</div>
 </div>
 
 <!-- ══════════════════════════════════════════════════
@@ -994,12 +1078,16 @@
       <h2 id="stats-title">GAME STATS</h2>
       <div id="stats-header-btns">
         <button id="stats-export-btn">⬇ EXPORT CSV</button>
+        <button id="stats-backup-btn">⬇ BACKUP</button>
         <button id="stats-close-btn">✕ CLOSE</button>
       </div>
     </div>
     <div id="stats-content"></div>
   </div>
 </div>
+
+<div id="save-warning">⚠ This device couldn’t save the game. Open the stats and export now so nothing is lost.</div>
+<div id="toast"></div>
 
 <script>
 // ============================================================
@@ -1067,10 +1155,17 @@ function showScreen(id) {
 function initHome() {
   const saved = localStorage.getItem('gt_save');
   document.getElementById('resume-btn').style.display = saved ? 'block' : 'none';
+  readAllGameRecords().then(list => {
+    const pending = list.filter(r => exportStatus(r).cls === 'warn' && !isResumableGame(r.id)).length;
+    document.getElementById('games-btn').textContent =
+      'PAST GAMES' + (pending ? ` · ${pending} NOT EXPORTED` : '');
+  });
 }
 
 function startNewGame() {
+  flushArchive();                 // the previous game stays in Past Games
   localStorage.removeItem('gt_save');
+  state.gameId = null;
   const prevMode = (state.setup && state.setup.mode) || 'single'; // preserve mode preference
   state.setup = {
     gameName: '',
@@ -1091,6 +1186,7 @@ function resumeGame() {
     if (!state.eventLog) state.eventLog = [];              // backfill for saves predating event log
     if (!state.trackingMode) state.trackingMode = 'dual';  // backfill: old saves had two full teams
     if (!state.possessionTime) state.possessionTime = { team1: 0, team2: 0 }; // backfill
+    if (!state.gameId) { state.gameId = newGameId(); state.startedAt = Date.now(); } // backfill
     timerSeconds = parsed.timerSeconds ?? 0;
     timerRunning = false;
     focusTeam = state.activeTeam || null; // sync view focus to restored possession (null = unassigned)
@@ -1474,6 +1570,12 @@ function buildGameState() {
   state.history = [];
   state.eventLog = [];
   state.possessionTime = { team1: 0, team2: 0 };
+  state.gameId = newGameId();
+  state.startedAt = Date.now();
+  state.finishedAt = null;
+  state.exportedAt = null;
+  state.exportedEvents = null;
+  requestPersistentStorage();
 }
 
 // ============================================================
@@ -1814,13 +1916,13 @@ function onFieldClick(idx, teamKey) {
     td.turnoverUnknown = false;
     getPlayerStat(pid).ds++;
     getPlayerStat(pid).touches++;
-    state.eventLog.push({ text: `${getPlayerName(pid)} got a D`, type: 'pass', exportType: 'to', t: timerSeconds, team: state.activeTeam });
+    state.eventLog.push({ text: `${getPlayerName(pid)} got a D`, type: 'pass', exportType: 'to', t: timerSeconds, at: Date.now(), team: state.activeTeam });
   } else {
     // normal pass — previous holder becomes potential assister
     td.prevDiscHolder = td.discHolder;
     td.discHolder = pid;
     getPlayerStat(pid).touches++;
-    state.eventLog.push({ text: `${getPlayerName(pid)} has the disc`, type: 'pass', t: timerSeconds, team: state.activeTeam });
+    state.eventLog.push({ text: `${getPlayerName(pid)} has the disc`, type: 'pass', t: timerSeconds, at: Date.now(), team: state.activeTeam });
   }
   // Nudge the clock reminder if the timer isn't running
   if (!timerRunning) {
@@ -1848,7 +1950,7 @@ function onTurnover(type) {
     : `${typeMap[type] || type}: ${getPlayerName(td.discHolder)}`;
   // In single mode, a D against the opponent produces a follow-up pickup event that
   // covers this row more meaningfully — hide it from the CSV export.
-  const toEntry = { text: evtText, type: 'to', t: timerSeconds, team: state.activeTeam };
+  const toEntry = { text: evtText, type: 'to', t: timerSeconds, at: Date.now(), team: state.activeTeam };
   if (type === 'd' && state.trackingMode === 'single' && state.activeTeam === 'team2') toEntry.exportHide = true;
   state.eventLog.push(toEntry);
   td.discHolder = null;
@@ -1886,7 +1988,7 @@ function onGoal(points = 1) {
   const prefix    = points === 2 ? '2pt ' : '';
   const scorer    = td.discHolder ? getPlayerName(td.discHolder) : (td.name || '?');
   const assistStr = td.prevDiscHolder ? ` (assist: ${getPlayerName(td.prevDiscHolder)})` : '';
-  state.eventLog.push({ text: `${prefix}Goal: ${scorer}${assistStr}`, type: 'goal', t: timerSeconds, team: state.activeTeam });
+  state.eventLog.push({ text: `${prefix}Goal: ${scorer}${assistStr}`, type: 'goal', t: timerSeconds, at: Date.now(), team: state.activeTeam });
   // Scorer keeps the disc — green circle persists after goal
   const btn   = document.getElementById('goal-btn');
   const btn2  = document.getElementById('goal-btn-2pt');
@@ -2014,8 +2116,186 @@ function updateTimerDisplay() {
 function saveState() {
   try {
     localStorage.setItem('gt_save', JSON.stringify({ state, timerSeconds }));
+    setSaveProblem('resume', false);
+  } catch (e) {
+    setSaveProblem('resume', true);
+  }
+  scheduleArchive();
+}
+
+// ============================================================
+// GAME ARCHIVE — a permanent record of every game
+// ============================================================
+// Each game gets its own record, written continuously while you play, to two
+// places: IndexedDB (main copy) and localStorage (backup copy). Starting a new
+// game never touches old records — they're only removed by an explicit Delete
+// in Past Games. Exports are made from these records, so a cancelled or failed
+// export never costs any data: you can always export again later.
+const ARCHIVE_DB = 'goaltimate-archive';
+const ARCHIVE_STORE = 'games';
+const ARCHIVE_LS_PREFIX = 'gt_game_';
+const ARCHIVE_LS_KEEP = 15; // localStorage backup copies kept for the newest N games (all stay in IndexedDB)
+let archiveDbPromise = null;
+let archiveTimer = null;
+
+function newGameId() {
+  return 'g' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+}
+
+function requestPersistentStorage() {
+  // Asks the browser not to clear this app's storage when the device is low on space
+  try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
+}
+
+function openArchiveDb() {
+  if (!window.indexedDB) return Promise.reject(new Error('IndexedDB unavailable'));
+  if (!archiveDbPromise) {
+    archiveDbPromise = new Promise((resolve, reject) => {
+      const req = indexedDB.open(ARCHIVE_DB, 1);
+      req.onupgradeneeded = () => req.result.createObjectStore(ARCHIVE_STORE, { keyPath: 'id' });
+      req.onsuccess = () => {
+        const db = req.result;
+        db.onclose = () => { archiveDbPromise = null; }; // iOS can drop the connection while backgrounded
+        resolve(db);
+      };
+      req.onerror = () => reject(req.error);
+    }).catch(err => { archiveDbPromise = null; throw err; });
+  }
+  return archiveDbPromise;
+}
+
+// Run one IndexedDB request; retry once on a fresh connection (iOS drops idle connections)
+function archiveRequest(mode, makeReq, retry = true) {
+  return openArchiveDb().then(db => new Promise((resolve, reject) => {
+    const tx = db.transaction(ARCHIVE_STORE, mode);
+    const req = makeReq(tx.objectStore(ARCHIVE_STORE));
+    tx.oncomplete = () => resolve(req.result);
+    tx.onerror = tx.onabort = () => reject(tx.error || req.error);
+  })).catch(err => {
+    if (!retry) throw err;
+    archiveDbPromise = null;
+    return archiveRequest(mode, makeReq, false);
+  });
+}
+
+// A plain, self-contained copy of a game (deep copy, taken immediately)
+function buildGameRecord(s = state, secs = timerSeconds) {
+  const { history, ...gameData } = s; // undo snapshots only duplicate this data
+  return JSON.parse(JSON.stringify({
+    id: s.gameId,
+    format: 1,
+    gameName: s.gameName || '',
+    startedAt: s.startedAt || null,
+    finishedAt: s.finishedAt || null,
+    exportedAt: s.exportedAt || null,
+    exportedEvents: s.exportedEvents ?? null,
+    updatedAt: Date.now(),
+    timerSeconds: secs || 0,
+    state: gameData,
+  }));
+}
+
+function writeGameRecord(rec) {
+  let lsOk = false;
+  try { localStorage.setItem(ARCHIVE_LS_PREFIX + rec.id, JSON.stringify(rec)); lsOk = true; } catch (e) {}
+  return archiveRequest('readwrite', st => st.put(rec)).then(() => true, () => lsOk)
+    .then(ok => { setSaveProblem('archive', !ok); return ok; });
+}
+
+function hasLiveGame() {
+  return !!(state.gameId && state.teams && state.teams.team1);
+}
+
+// Save at most every 1.5s while playing (the timer calls saveState every second)
+function scheduleArchive() {
+  if (!hasLiveGame() || archiveTimer) return;
+  archiveTimer = setTimeout(flushArchive, 1500);
+}
+
+function flushArchive() {
+  clearTimeout(archiveTimer);
+  archiveTimer = null;
+  if (!hasLiveGame()) return Promise.resolve(true);
+  return writeGameRecord(buildGameRecord());
+}
+
+function readAllGameRecords() {
+  // Merge both copies, keeping the newest version of each game
+  const byId = {};
+  const take = r => {
+    if (r && r.id && (!byId[r.id] || (r.updatedAt || 0) > (byId[r.id].updatedAt || 0))) byId[r.id] = r;
+  };
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith(ARCHIVE_LS_PREFIX)) { try { take(JSON.parse(localStorage.getItem(k))); } catch (e) {} }
+    }
+  } catch (e) {}
+  return archiveRequest('readonly', st => st.getAll()).catch(() => []).then(list => {
+    (list || []).forEach(take);
+    return Object.values(byId).sort((a, b) => (b.startedAt || b.updatedAt || 0) - (a.startedAt || a.updatedAt || 0));
+  });
+}
+
+function deleteGameRecord(id) {
+  try { localStorage.removeItem(ARCHIVE_LS_PREFIX + id); } catch (e) {}
+  return archiveRequest('readwrite', st => st.delete(id)).catch(() => {});
+}
+
+// Keep localStorage from filling up: drop backup copies of older games, but only
+// ones confirmed to be safely stored in IndexedDB.
+function pruneLocalCopies() {
+  let copies = [];
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith(ARCHIVE_LS_PREFIX)) {
+        try { copies.push(JSON.parse(localStorage.getItem(k))); } catch (e) {}
+      }
+    }
+  } catch (e) { return; }
+  copies = copies.filter(r => r && r.id && r.id !== state.gameId)
+    .sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0))
+    .slice(ARCHIVE_LS_KEEP);
+  copies.forEach(r => {
+    archiveRequest('readonly', st => st.get(r.id)).then(stored => {
+      if (stored && (stored.updatedAt || 0) >= (r.updatedAt || 0)) {
+        try { localStorage.removeItem(ARCHIVE_LS_PREFIX + r.id); } catch (e) {}
+      }
+    }).catch(() => {});
+  });
+}
+
+// A game saved by an older version of the app (before the archive existed) gets an id
+// and goes into the archive straight away.
+function archiveExistingSave() {
+  try {
+    const saved = localStorage.getItem('gt_save');
+    if (!saved) return;
+    const parsed = JSON.parse(saved);
+    const s = parsed && parsed.state;
+    if (!s || !s.teams || !s.teams.team1) return;
+    if (!s.gameId) {
+      s.gameId = newGameId();
+      s.startedAt = s.startedAt || Date.now();
+      localStorage.setItem('gt_save', JSON.stringify(parsed));
+    }
+    writeGameRecord(buildGameRecord(s, parsed.timerSeconds));
   } catch (e) {}
 }
+
+// Save problems are shown on screen instead of being silently ignored
+const saveProblems = { resume: false, archive: false };
+function setSaveProblem(kind, on) {
+  if (saveProblems[kind] === on) return;
+  saveProblems[kind] = on;
+  const banner = document.getElementById('save-warning');
+  if (banner) banner.style.display = (saveProblems.resume || saveProblems.archive) ? 'block' : 'none';
+}
+
+// Write immediately when the app is hidden or closed (iOS may stop it without warning)
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flushArchive(); });
+window.addEventListener('pagehide', () => flushArchive());
 
 // ============================================================
 // EDIT TEAM MODAL
@@ -2206,8 +2486,9 @@ function endGame() {
 }
 
 function returnToSetup() {
-  const confirmed = window.confirm('Abandon this game and return to setup? All stats will be lost.');
+  const confirmed = window.confirm('Leave this game and go back to setup? It stays saved in Past Games.');
   if (!confirmed) return;
+  flushArchive();
   document.getElementById('confirm-end-modal').style.display = 'none';
   // Carry team1's name, color, and roster back into setup
   const t1 = state.teams && state.teams.team1;
@@ -2225,20 +2506,35 @@ function returnToSetup() {
     team2: { name: 'Light', colorId: 'white', players: [{ number: '', name: '' }] },
   };
   localStorage.removeItem('gt_save');
+  state.gameId = null;
   timerSeconds = 0; timerRunning = false; clearInterval(timerInterval);
   updateTimerDisplay();
   initSetupScreen();
   showScreen('setup-screen');
 }
 
-function showStats() {
+// The game currently shown in the stats modal — the live game or one from Past Games.
+// Exports always come from this record, never from whatever happens to be on screen.
+let statsRecord = null;
+
+function showCurrentGameStats() {
   document.getElementById('confirm-end-modal').style.display = 'none';
+  state.finishedAt = Date.now();
+  saveState();
+  flushArchive();
+  showStats(buildGameRecord());
+}
+
+function showStats(rec) {
+  statsRecord = rec;
+  const g = rec.state;
+  document.getElementById('stats-title').textContent = (rec.gameName || 'GAME STATS').toUpperCase();
   const content = document.getElementById('stats-content');
   content.innerHTML = '';
 
-  const teamsToShow = state.trackingMode === 'single' ? ['team1'] : ['team1', 'team2'];
+  const teamsToShow = g.trackingMode === 'single' ? ['team1'] : ['team1', 'team2'];
   teamsToShow.forEach(key => {
-    const team = state.teams[key];
+    const team = g.teams[key];
     if (!team) return;
     const color = getColor(team.colorId);
     const block = document.createElement('div');
@@ -2247,7 +2543,7 @@ function showStats() {
     const nameEl = document.createElement('div');
     nameEl.className = 'stats-team-name';
     nameEl.style.color = color.swatch;
-    const teamScore = state.score[key] || 0;
+    const teamScore = g.score[key] || 0;
     nameEl.innerHTML = `<span>${team.name || key.toUpperCase()}</span><span class="stats-score-badge">${teamScore}</span>`;
     block.appendChild(nameEl);
 
@@ -2259,9 +2555,9 @@ function showStats() {
     const tbody = document.createElement('tbody');
 
     team.players.forEach(p => {
-      const st = state.stats[p.id] || { goals1: 0, goals2: 0, assists: 0, ds: 0, turnovers: 0, touches: 0, pm: 0 };
+      const st = g.stats[p.id] || { goals1: 0, goals2: 0, assists: 0, ds: 0, turnovers: 0, touches: 0, pm: 0 };
       const totalPts = st.goals1 + st.goals2 * 2;
-      const pt = state.playTime[p.id] || 0;
+      const pt = (g.playTime || {})[p.id] || 0;
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td>${p.name}</td>
@@ -2280,7 +2576,7 @@ function showStats() {
 
     // Totals row — sum of PTS column, should equal team score
     const teamTotalPts = team.players.reduce((sum, p) => {
-      const st = state.stats[p.id] || {};
+      const st = g.stats[p.id] || {};
       return sum + (st.goals1 || 0) + (st.goals2 || 0) * 2;
     }, 0);
     const tfoot = document.createElement('tfoot');
@@ -2298,54 +2594,74 @@ function showStats() {
   document.getElementById('stats-modal').style.display = 'flex';
 }
 
-function exportCSV() {
+// ============================================================
+// EXPORT
+// ============================================================
+function fmtClock(ms) {
+  return ms ? new Date(ms).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', second: '2-digit' }) : '';
+}
+function fmtDateTime(ms) {
+  return ms ? new Date(ms).toLocaleString([], { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : '';
+}
+
+function gameFileBase(rec) {
+  const slug = (rec.gameName || '').trim().replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '');
+  const d = new Date(rec.startedAt || rec.updatedAt || Date.now());
+  const date = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  return `goaltimate-${date}` + (slug ? `-${slug}` : '');
+}
+
+function buildCSV(rec) {
+  const g = rec.state;
+  const secs = rec.timerSeconds || 0;
   const rows = [];
   // Summary block
-  const t1 = state.teams.team1;
-  const t2 = state.teams.team2;
-  const pt = state.possessionTime || {};
+  const t1 = g.teams.team1;
+  const t2 = g.teams.team2;
+  const pt = g.possessionTime || {};
   rows.push(['SUMMARY']);
-  rows.push(['Game', state.gameName || '']);
+  rows.push(['Game', g.gameName || '']);
+  rows.push(['Started', fmtDateTime(rec.startedAt)]);
   rows.push(['Final Score', 'Team', 'Score', 'Possession']);
-  rows.push(['', t1.name, state.score.team1, fmtPT(pt.team1 || 0)]);
-  rows.push(['', t2.name, state.score.team2, fmtPT(pt.team2 || 0)]);
-  rows.push(['Game Time', fmtPT(timerSeconds)]);
+  rows.push(['', t1.name, g.score.team1, fmtPT(pt.team1 || 0)]);
+  rows.push(['', t2.name, g.score.team2, fmtPT(pt.team2 || 0)]);
+  rows.push(['Game Time', fmtPT(secs)]);
   rows.push([]);
   rows.push(['Team','Name','Number','Touches','1pt Goals','2pt Goals','Total Pts','Assists','Turnovers','Ds','+/-','Play Time']);
-  const teamsToExport = state.trackingMode === 'single' ? ['team1'] : ['team1', 'team2'];
+  const teamsToExport = g.trackingMode === 'single' ? ['team1'] : ['team1', 'team2'];
   teamsToExport.forEach(key => {
-    const team = state.teams[key];
+    const team = g.teams[key];
     if (!team) return;
     team.players.forEach(p => {
-      const st = state.stats[p.id] || { goals1: 0, goals2: 0, assists: 0, ds: 0, turnovers: 0, touches: 0, pm: 0 };
+      const st = g.stats[p.id] || { goals1: 0, goals2: 0, assists: 0, ds: 0, turnovers: 0, touches: 0, pm: 0 };
       const totalPts = st.goals1 + st.goals2 * 2;
-      const pt = state.playTime[p.id] || 0;
+      const ptime = (g.playTime || {})[p.id] || 0;
       rows.push([
         team.name || key, p.name, p.number || '',
-        st.touches || 0, st.goals1, st.goals2, totalPts, st.assists || 0, st.turnovers, st.ds || 0, st.pm || 0, fmtPT(pt)
+        st.touches || 0, st.goals1, st.goals2, totalPts, st.assists || 0, st.turnovers, st.ds || 0, st.pm || 0, fmtPT(ptime)
       ]);
     });
   });
   // Event log block
   rows.push([]);
-  rows.push(['Time', 'Type', 'Event', 'Team']);
-  (state.eventLog || []).forEach(e => {
+  rows.push(['Game Clock', 'Time of Day', 'Type', 'Event', 'Team']);
+  (g.eventLog || []).forEach(e => {
     if (e.exportHide) return;
-    const teamName = e.team && state.teams[e.team] ? state.teams[e.team].name : (e.team || '');
-    rows.push([fmtPT(e.t ?? 0), e.exportType || e.type, e.text, teamName]);
+    const teamName = e.team && g.teams[e.team] ? g.teams[e.team].name : (e.team || '');
+    rows.push([fmtPT(e.t ?? 0), fmtClock(e.at), e.exportType || e.type, e.text, teamName]);
   });
+  return rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+}
 
-  const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
-  const slug = (state.gameName || '').trim().replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '');
-  const filename = (slug ? `goaltimate-${slug}` : 'goaltimate-stats') + '.csv';
-
+// Hand a file to the user. Resolves to 'shared' | 'downloaded' | 'copied' | 'cancelled' | 'failed'.
+// Must be called straight from a tap (no awaiting first) so iOS allows the share sheet.
+function deliverFile(content, filename, mime) {
+  const file = new File([content], filename, { type: mime });
   // iOS home-screen apps ignore <a download>, so prefer the share sheet (Save to Files, AirDrop, Mail…)
-  const file = new File([csv], filename, { type: 'text/csv' });
   if (navigator.canShare && navigator.canShare({ files: [file] })) {
-    navigator.share({ files: [file], title: filename }).catch(err => {
-      if (err.name !== 'AbortError') copyCSVFallback(csv);
-    });
-    return;
+    return navigator.share({ files: [file], title: filename })
+      .then(() => 'shared')
+      .catch(err => (err && err.name === 'AbortError') ? 'cancelled' : copyFallback(content));
   }
   try {
     const url = URL.createObjectURL(file);
@@ -2356,18 +2672,169 @@ function exportCSV() {
     a.click();
     a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 10000);
+    return Promise.resolve('downloaded');
   } catch (e) {
-    copyCSVFallback(csv);
+    return copyFallback(content);
   }
 }
 
-function copyCSVFallback(csv) {
-  const done = () => alert('Could not save the file, so the CSV was copied instead. Paste it into Notes or an email to keep it.');
+function copyFallback(text) {
   if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(csv).then(done, () => prompt('Copy this CSV:', csv));
-  } else {
-    prompt('Copy this CSV:', csv);
+    return navigator.clipboard.writeText(text).then(() => 'copied', () => {
+      prompt('Copy this and paste it into Notes or an email:', text);
+      return 'copied';
+    });
   }
+  prompt('Copy this and paste it into Notes or an email:', text);
+  return Promise.resolve('copied');
+}
+
+function reportExport(result, filename) {
+  if (result === 'shared' || result === 'downloaded') {
+    showToast(`Exported ✓  ${filename}`, 'ok');
+  } else if (result === 'copied') {
+    showToast('Couldn’t save a file, so it was copied instead. Paste it into Notes or an email to keep it.', 'warn');
+  } else if (result === 'cancelled') {
+    showToast('Not exported — the share sheet was closed. The game is still saved in Past Games.', 'warn');
+  } else {
+    showToast('Export failed. The game is still saved in Past Games — try again.', 'error');
+  }
+}
+
+// format: 'csv' (spreadsheet) or 'json' (complete, lossless backup of everything recorded)
+function exportGame(rec, format) {
+  const isCSV = format === 'csv';
+  const filename = gameFileBase(rec) + (isCSV ? '.csv' : '.json');
+  const content = isCSV ? buildCSV(rec) : JSON.stringify({ app: 'goaltimate-stats', format: 1, games: [rec] }, null, 2);
+  return deliverFile(content, filename, isCSV ? 'text/csv' : 'application/json').then(result => {
+    if (result === 'shared' || result === 'downloaded') markExported([rec]);
+    reportExport(result, filename);
+    return result;
+  });
+}
+
+function exportAllGames(records) {
+  const d = new Date();
+  const filename = `goaltimate-backup-all-games-${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}.json`;
+  const content = JSON.stringify({ app: 'goaltimate-stats', format: 1, games: records }, null, 2);
+  return deliverFile(content, filename, 'application/json').then(result => {
+    if (result === 'shared' || result === 'downloaded') markExported(records);
+    reportExport(result, filename);
+    return result;
+  });
+}
+
+function markExported(records) {
+  const at = Date.now();
+  records.forEach(rec => {
+    const events = ((rec.state && rec.state.eventLog) || []).length;
+    rec.exportedAt = at;
+    rec.exportedEvents = events;
+    if (state.gameId === rec.id) {
+      state.exportedAt = at;
+      state.exportedEvents = events;
+      saveState();
+      flushArchive();
+    } else {
+      rec.updatedAt = at;
+      writeGameRecord(rec);
+    }
+  });
+  if (document.getElementById('games-screen').classList.contains('active')) renderPastGames();
+}
+
+let toastTimer = null;
+function showToast(msg, kind) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'show ' + (kind || 'ok');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { t.className = ''; }, kind === 'ok' ? 4000 : 9000);
+}
+
+// ============================================================
+// PAST GAMES SCREEN
+// ============================================================
+let pastGames = []; // loaded when the screen opens, so exports can start instantly from a tap
+
+function exportStatus(rec) {
+  const events = ((rec.state && rec.state.eventLog) || []).length;
+  if (!rec.exportedAt) return { cls: 'warn', text: 'Not exported' };
+  if (rec.exportedEvents != null && rec.exportedEvents !== events) return { cls: 'warn', text: 'Changed since export' };
+  return { cls: 'ok', text: 'Exported ✓' };
+}
+
+function openPastGames() {
+  showScreen('games-screen');
+  document.getElementById('games-list').innerHTML = '<div class="games-empty">Loading…</div>';
+  flushArchive().then(readAllGameRecords).then(list => {
+    pastGames = list;
+    renderPastGames();
+  });
+}
+
+function isResumableGame(id) {
+  try {
+    const saved = JSON.parse(localStorage.getItem('gt_save') || 'null');
+    return !!(saved && saved.state && saved.state.gameId === id);
+  } catch (e) { return false; }
+}
+
+function renderPastGames() {
+  const list = document.getElementById('games-list');
+  list.innerHTML = '';
+  if (!pastGames.length) {
+    list.innerHTML = '<div class="games-empty">No games saved yet.<br>Games are saved here automatically as you play.</div>';
+    return;
+  }
+  pastGames.forEach(rec => {
+    const g = rec.state || {};
+    const t1 = (g.teams && g.teams.team1) || {}, t2 = (g.teams && g.teams.team2) || {};
+    const score = g.score || {};
+    const events = (g.eventLog || []).length;
+    const status = exportStatus(rec);
+    const live = isResumableGame(rec.id);
+
+    const row = document.createElement('div');
+    row.className = 'game-row';
+    const info = document.createElement('div');
+    info.className = 'game-info';
+    const name = document.createElement('div');
+    name.className = 'game-name';
+    name.textContent = rec.gameName || 'Untitled game';
+    const meta = document.createElement('div');
+    meta.className = 'game-meta';
+    meta.textContent = `${fmtDateTime(rec.startedAt || rec.updatedAt)} · ${t1.name || 'Team 1'} ${score.team1 || 0} – ${score.team2 || 0} ${t2.name || 'Team 2'} · ${events} events`;
+    const badges = document.createElement('div');
+    badges.className = 'game-badges';
+    badges.innerHTML = `<span class="game-badge ${status.cls}">${status.text}</span>` +
+      (live ? '<span class="game-badge live">In progress</span>' : '');
+    info.append(name, meta, badges);
+
+    const actions = document.createElement('div');
+    actions.className = 'game-actions';
+    const mk = (label, cls, fn) => {
+      const b = document.createElement('button');
+      b.className = 'game-act ' + cls; b.textContent = label;
+      b.addEventListener('click', fn);
+      actions.appendChild(b);
+    };
+    mk('STATS', '', () => showStats(rec));
+    mk('CSV', '', () => exportGame(rec, 'csv'));
+    mk('BACKUP', '', () => exportGame(rec, 'json'));
+    mk('✕', 'del', () => {
+      if (live) { alert('This game is still in progress. Resume it from the home screen, or start a new game first.'); return; }
+      const warn = status.text === 'Exported ✓' ? '' : '\n\nThis game has NOT been exported.';
+      if (!confirm(`Delete "${rec.gameName || 'Untitled game'}" permanently? This can’t be undone.${warn}`)) return;
+      deleteGameRecord(rec.id).then(() => {
+        pastGames = pastGames.filter(r => r.id !== rec.id);
+        renderPastGames();
+      });
+    });
+
+    row.append(info, actions);
+    list.appendChild(row);
+  });
 }
 
 // ============================================================
@@ -2378,7 +2845,7 @@ document.getElementById('new-game-btn').addEventListener('click', startNewGame);
 document.getElementById('resume-btn').addEventListener('click', resumeGame);
 
 // Setup
-document.getElementById('back-btn').addEventListener('click', () => showScreen('home-screen'));
+document.getElementById('back-btn').addEventListener('click', () => { initHome(); showScreen('home-screen'); });
 document.getElementById('start-game-btn').addEventListener('click', validateAndStartGame);
 document.getElementById('add-team1').addEventListener('click', () => addSetupPlayer('team1'));
 document.getElementById('add-team2').addEventListener('click', () => addSetupPlayer('team2'));
@@ -2398,7 +2865,7 @@ document.getElementById('goal-btn-2pt').addEventListener('click', () => onGoal(2
 document.getElementById('undo-btn').addEventListener('click', onUndo);
 document.getElementById('timer-btn').addEventListener('click', toggleTimer);
 document.getElementById('end-btn').addEventListener('click', endGame);
-document.getElementById('confirm-end-yes').addEventListener('click', showStats);
+document.getElementById('confirm-end-yes').addEventListener('click', showCurrentGameStats);
 document.getElementById('confirm-end-no').addEventListener('click', () => {
   document.getElementById('confirm-end-modal').style.display = 'none';
 });
@@ -2406,7 +2873,14 @@ document.getElementById('confirm-end-new-setup').addEventListener('click', retur
 document.getElementById('stats-close-btn').addEventListener('click', () => {
   document.getElementById('stats-modal').style.display = 'none';
 });
-document.getElementById('stats-export-btn').addEventListener('click', exportCSV);
+document.getElementById('stats-export-btn').addEventListener('click', () => { if (statsRecord) exportGame(statsRecord, 'csv'); });
+document.getElementById('stats-backup-btn').addEventListener('click', () => { if (statsRecord) exportGame(statsRecord, 'json'); });
+document.getElementById('games-btn').addEventListener('click', openPastGames);
+document.getElementById('games-back-btn').addEventListener('click', () => { initHome(); showScreen('home-screen'); });
+document.getElementById('games-backup-all-btn').addEventListener('click', () => {
+  if (!pastGames.length) { showToast('No games to back up yet.', 'warn'); return; }
+  exportAllGames(pastGames);
+});
 document.getElementById('turn-btn').addEventListener('click', () => {
   document.getElementById('turn-menu').classList.toggle('open');
 });
@@ -2491,6 +2965,8 @@ _benchResizeObs.observe(document.getElementById('bench-grid-2'));
 // ============================================================
 // INIT
 // ============================================================
+archiveExistingSave();
+pruneLocalCopies();
 initHome();
 showScreen('home-screen');
 </script>
