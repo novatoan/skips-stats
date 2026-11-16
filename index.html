@@ -946,7 +946,7 @@
     <section class="help-glossary">
       <h3>What the stats mean</h3>
       <dl>
-        <dt>TCH</dt><dd>Touches — times the player had the disc</dd>
+        <dt>TCH</dt><dd>Touches — times the player had the disc (a dropped catch doesn't count)</dd>
         <dt>AST</dt><dd>Assists — threw the pass that scored</dd>
         <dt>TO</dt><dd>Turnovers — the thrower on a throwaway or stall, the receiver on a drop</dd>
         <dt>D</dt><dd>Defensive block that won the disc back</dd>
@@ -2000,7 +2000,12 @@ function onTurnover(type) {
     for (let i = state.eventLog.length - 1; i >= 0; i--) {
       const e = state.eventLog[i];
       if (e.type === 'pass' && e.team === state.activeTeam) {
-        if (e.pid === td.discHolder) state.eventLog[i] = { ...e, dropped: true };
+        if (e.pid === td.discHolder && e.from) {
+          state.eventLog[i] = { ...e, dropped: true };
+          // A dropped catch isn't a touch
+          const st = getPlayerStat(td.discHolder);
+          st.touches = Math.max(0, (st.touches || 0) - 1);
+        }
         break;
       }
     }
