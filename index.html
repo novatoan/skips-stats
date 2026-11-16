@@ -554,10 +554,11 @@
     }
     #stats-content {
       flex: 1; overflow-y: auto; padding: 16px 20px;
-      display: flex; gap: 20px;
+      display: flex; flex-wrap: wrap; gap: 24px 20px; align-content: flex-start;
     }
+    /* Side by side when there's room for both full tables, stacked otherwise */
     .stats-team-block {
-      flex: 1; min-width: 0;
+      flex: 1 1 620px; min-width: 0; overflow-x: auto;
     }
     .stats-team-name {
       font-size: clamp(0.8em, 2vw, 1.1em); font-weight: 900;
@@ -1714,9 +1715,17 @@ function onTileTap(pid, teamKey) {
   if (!td.turnoverUnknown && td.discHolder === pid) return;
   if (!historyPushed) pushHistory();
   // Anyone who touches the disc is on the field
-  markOnField(teamKey, pid);
+  const wasOnField = td.field.includes(pid);
+  const subbedOff = markOnField(teamKey, pid);
   noteActivity(td, pid);
   if (td.turnoverUnknown) {
+    // The defender who picked up the D was on the line that forced it, even if they hadn't
+    // been marked on yet — give them the Team Stop. If that pushed someone else off a full
+    // line, that player evidently wasn't on, so their Team Stop moves to the D-getter.
+    if (!wasOnField) {
+      getPlayerStat(pid).teamStops = (getPlayerStat(pid).teamStops || 0) + 1;
+      if (subbedOff) getPlayerStat(subbedOff).teamStops = Math.max(0, (getPlayerStat(subbedOff).teamStops || 0) - 1);
+    }
     // D pickup — credit the defender, no assister
     td.prevDiscHolder = null;
     td.discHolder = pid;
@@ -1740,7 +1749,7 @@ function onTileTap(pid, teamKey) {
 }
 
 function getPlayerStat(pid) {
-  if (!state.stats[pid]) state.stats[pid] = { goals1: 0, goals2: 0, assists: 0, ds: 0, turnovers: 0, touches: 0, pm: 0 };
+  if (!state.stats[pid]) state.stats[pid] = { goals1: 0, goals2: 0, assists: 0, ds: 0, turnovers: 0, touches: 0, pm: 0, teamStops: 0, teamDrops: 0 };
   return state.stats[pid];
 }
 
@@ -1750,6 +1759,10 @@ function onTurnover(type) {
   const td = getTeamData();
   // All turnover types credit the disc holder
   if (td.discHolder) getPlayerStat(td.discHolder).turnovers++;
+  // Team Drop: everyone on the line that lost the disc. Team Stop: everyone on the defending line.
+  const defKey = state.activeTeam === 'team1' ? 'team2' : 'team1';
+  td.field.forEach(pid => { if (pid) getPlayerStat(pid).teamDrops = (getPlayerStat(pid).teamDrops || 0) + 1; });
+  state.teams[defKey].field.forEach(pid => { if (pid) getPlayerStat(pid).teamStops = (getPlayerStat(pid).teamStops || 0) + 1; });
   // Log event before clearing state (so we still have the player name)
   const typeMap = { throwaway: 'Throwaway', drop: 'Drop', stall: 'Stall', d: 'D' };
   const evtText = type === 'd'
@@ -2239,12 +2252,12 @@ function showStats(rec) {
     const table = document.createElement('table');
     table.className = 'stats-table';
     table.innerHTML = `<thead><tr>
-      <th>NAME</th><th>#</th><th>TCH</th><th>1PT</th><th>2PT</th><th>PTS</th><th>AST</th><th>TO</th><th>D</th><th>+/-</th><th>TIME</th>
+      <th>NAME</th><th>#</th><th>TCH</th><th>1PT</th><th>2PT</th><th>PTS</th><th>AST</th><th>TO</th><th>D</th><th>STOP</th><th>DROP</th><th>+/-</th><th>TIME</th>
     </tr></thead>`;
     const tbody = document.createElement('tbody');
 
     team.players.forEach(p => {
-      const st = g.stats[p.id] || { goals1: 0, goals2: 0, assists: 0, ds: 0, turnovers: 0, touches: 0, pm: 0 };
+      const st = g.stats[p.id] || { goals1: 0, goals2: 0, assists: 0, ds: 0, turnovers: 0, touches: 0, pm: 0, teamStops: 0, teamDrops: 0 };
       const totalPts = st.goals1 + st.goals2 * 2;
       const pt = (g.playTime || {})[p.id] || 0;
       const tr = document.createElement('tr');
@@ -2258,6 +2271,8 @@ function showStats(rec) {
         <td>${st.assists || 0}</td>
         <td>${st.turnovers}</td>
         <td>${st.ds || 0}</td>
+        <td>${st.teamStops || 0}</td>
+        <td>${st.teamDrops || 0}</td>
         <td>${fmtPM(st.pm || 0)}</td>
         <td>${fmtPT(pt)}</td>`;
       tbody.appendChild(tr);
@@ -2272,7 +2287,7 @@ function showStats(rec) {
     tfoot.innerHTML = `<tr class="stats-totals-row">
       <td colspan="5" style="text-align:right">TOTAL</td>
       <td class="pts-total"><strong>${teamTotalPts}</strong></td>
-      <td colspan="5"></td>
+      <td colspan="7"></td>
     </tr>`;
     table.appendChild(tbody);
     table.appendChild(tfoot);
@@ -2316,18 +2331,18 @@ function buildCSV(rec) {
   rows.push(['', t2.name, g.score.team2, fmtPT(pt.team2 || 0)]);
   rows.push(['Game Time', fmtPT(secs)]);
   rows.push([]);
-  rows.push(['Team','Name','Number','Touches','1pt Goals','2pt Goals','Total Pts','Assists','Turnovers','Ds','+/-','Play Time']);
+  rows.push(['Team','Name','Number','Touches','1pt Goals','2pt Goals','Total Pts','Assists','Turnovers','Ds','Team Stops','Team Drops','+/-','Play Time']);
   const teamsToExport = g.trackingMode === 'single' ? ['team1'] : ['team1', 'team2'];
   teamsToExport.forEach(key => {
     const team = g.teams[key];
     if (!team) return;
     team.players.forEach(p => {
-      const st = g.stats[p.id] || { goals1: 0, goals2: 0, assists: 0, ds: 0, turnovers: 0, touches: 0, pm: 0 };
+      const st = g.stats[p.id] || { goals1: 0, goals2: 0, assists: 0, ds: 0, turnovers: 0, touches: 0, pm: 0, teamStops: 0, teamDrops: 0 };
       const totalPts = st.goals1 + st.goals2 * 2;
       const ptime = (g.playTime || {})[p.id] || 0;
       rows.push([
         team.name || key, p.name, p.number || '',
-        st.touches || 0, st.goals1, st.goals2, totalPts, st.assists || 0, st.turnovers, st.ds || 0, st.pm || 0, fmtPT(ptime)
+        st.touches || 0, st.goals1, st.goals2, totalPts, st.assists || 0, st.turnovers, st.ds || 0, st.teamStops || 0, st.teamDrops || 0, st.pm || 0, fmtPT(ptime)
       ]);
     });
   });
