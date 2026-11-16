@@ -2499,7 +2499,7 @@ function showStats(rec) {
     const table = document.createElement('table');
     table.className = 'stats-table';
     table.innerHTML = `<thead><tr>
-      <th>NAME</th><th>#</th><th>TCH</th><th>1PT</th><th>2PT</th><th>PTS</th><th>AST</th><th>TO</th><th>D</th><th>STOP</th><th>DROP</th><th>+/-</th><th>TIME</th>
+      <th>NAME</th><th>#</th><th>TCH</th><th>1PT</th><th>2PT</th><th>PTS</th><th>AST</th><th>TO</th><th>D</th><th>POSS WON</th><th>POSS LOST</th><th>+/-</th><th>TIME</th>
     </tr></thead>`;
     const tbody = document.createElement('tbody');
 
@@ -2578,7 +2578,7 @@ function buildCSV(rec) {
   rows.push(['', t2.name, g.score.team2, fmtPT(pt.team2 || 0)]);
   rows.push(['Game Time', fmtPT(secs)]);
   rows.push([]);
-  rows.push(['Team','Name','Number','Touches','1pt Goals','2pt Goals','Total Pts','Assists','Turnovers','Ds','Team Stops','Team Drops','+/-','Play Time']);
+  rows.push(['Team','Name','Number','Touches','1pt Goals','2pt Goals','Total Pts','Assists','Turnovers','Ds','Possessions Won (on field)','Possessions Lost (on field)','+/-','Play Time']);
   const teamsToExport = g.trackingMode === 'single' ? ['team1'] : ['team1', 'team2'];
   teamsToExport.forEach(key => {
     const team = g.teams[key];
