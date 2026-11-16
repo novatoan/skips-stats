@@ -4,7 +4,7 @@ A mobile-first web app for tracking live stats during goaltimate games, built to
 
 ## What it does
 
-- **Game setup** – name the game, enter players for each team, and choose to track **My Team** only or **Both Teams**.
+- **Game setup** – name the game, enter players for each team, and choose to track **One Team** or **Two Teams**.
 - **Saved rosters** – save a team's player list and load it again for later games.
 - **Live tracking** – tap players to record who holds the disc. Log **Goals** and **Turnovers** (throwaway, drop, stall), with a game clock and **Undo**.
 - **Edit teams mid-game** – add or rename players without ending the game.
