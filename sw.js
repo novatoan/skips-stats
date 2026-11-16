@@ -1,4 +1,4 @@
-const CACHE = 'goaltimate-v3';
+const CACHE = 'goaltimate-v4';
 const ASSETS = ['/', '/index.html'];
 
 self.addEventListener('install', e => {
